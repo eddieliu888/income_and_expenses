@@ -1,0 +1,3318 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>Eddie Pro 收支管家</title>
+    <meta name="theme-color" content="#211f1b">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="application-name" content="Eddie Pro 收支管家">
+    <style>
+        :root {
+            --primary: #111827;
+            --primary-2: #0b1220;
+            --accent: #2563eb;
+            --accent-soft: #dbeafe;
+            --success: #059669;
+            --danger: #dc2626;
+            --warning: #d97706;
+            --surface: rgba(255,255,255,0.92);
+            --surface-2: #ffffff;
+            --surface-muted: #f8fafc;
+            --bg: linear-gradient(180deg, #eef2ff 0%, #f8fafc 28%, #f6f7fb 100%);
+            --text-main: #0f172a;
+            --text-sub: #64748b;
+            --border: rgba(148,163,184,0.22);
+            --radius: 24px;
+            --shadow-lg: 0 20px 45px rgba(15, 23, 42, 0.12);
+            --shadow-md: 0 10px 24px rgba(15, 23, 42, 0.08);
+            --cat-food: #f59e0b;
+            --cat-transport: #3b82f6;
+            --cat-ent: #8b5cf6;
+            --cat-life: #10b981;
+            --cat-other: #94a3b8;
+        }
+        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+        html, body { margin: 0; width: 100%; max-width: 100%; overflow-x: hidden; }
+        body {
+            font-family: Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang TC", "Noto Sans TC", sans-serif;
+            background: var(--bg);
+            color: var(--text-main);
+            line-height: 1.45;
+            min-height: 100vh;
+            width: 100%;
+            max-width: 100vw;
+            overflow-x: hidden;
+            padding-bottom: calc(env(safe-area-inset-bottom, 0px) + 110px);
+        }
+        body::before {
+            content: "";
+            position: fixed;
+            inset: 0;
+            pointer-events: none;
+            background:
+                radial-gradient(circle at top left, rgba(59,130,246,0.18), transparent 28%),
+                radial-gradient(circle at top right, rgba(14,165,233,0.10), transparent 22%),
+                radial-gradient(circle at bottom left, rgba(168,85,247,0.10), transparent 24%);
+            z-index: -1;
+        }
+        body.modal-open { overflow: hidden; height: 100vh; position: fixed; width: 100%; }
+
+        header {
+            position: sticky;
+            top: 0;
+            z-index: 95;
+            background: rgba(246,247,251,0.78);
+            backdrop-filter: blur(16px);
+            border-bottom: 1px solid rgba(255,255,255,0.65);
+            padding: 16px 18px 12px;
+        }
+        h1 {
+            margin: 0;
+            font-size: 1.05rem;
+            font-weight: 800;
+            letter-spacing: 0.02em;
+            color: var(--text-main);
+        }
+        .header-shell {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+        }
+        .header-kicker {
+            font-size: 0.72rem;
+            font-weight: 800;
+            color: var(--text-sub);
+            text-transform: uppercase;
+            letter-spacing: 0.12em;
+            margin-bottom: 4px;
+        }
+        .header-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 10px 12px;
+            border-radius: 999px;
+            background: rgba(255,255,255,0.78);
+            border: 1px solid rgba(255,255,255,0.9);
+            box-shadow: var(--shadow-md);
+            color: var(--text-sub);
+            font-size: 0.74rem;
+            font-weight: 800;
+            white-space: nowrap;
+        }
+
+        .page { display: none; padding: 12px 16px 0; animation: fadeIn .25s ease; width: 100%; max-width: 100%; overflow-x: hidden; }
+        .page.active { display: block; }
+        .page.report-pad { padding-bottom: 230px; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: translateY(0); } }
+
+        .card {
+            background: var(--surface);
+            border: 1px solid rgba(255,255,255,0.78);
+            border-radius: var(--radius);
+            box-shadow: var(--shadow-lg);
+            padding: 16px;
+            margin-bottom: 14px;
+            backdrop-filter: blur(18px);
+        }
+        .panel-title {
+            font-size: .82rem;
+            font-weight: 800;
+            color: var(--text-sub);
+            text-transform: uppercase;
+            letter-spacing: .12em;
+            margin-bottom: 10px;
+        }
+        .section-title {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 8px;
+            margin: 8px 2px 10px;
+            padding: 0 2px;
+            font-size: .8rem;
+            font-weight: 900;
+            color: var(--text-sub);
+            text-transform: uppercase;
+            letter-spacing: .12em;
+        }
+
+        .home-hero {
+            background: linear-gradient(135deg, #0f172a 0%, #111827 52%, #1d4ed8 100%);
+            color: white;
+            border-radius: 28px;
+            padding: 16px;
+            box-shadow: 0 24px 50px rgba(15,23,42,0.22);
+            margin-bottom: 12px;
+        }
+        .home-hero, .overview-grid, .overview-box, .overview-panel, .tx-list, .tx-item, .card, .report-shell, .analysis-shell, .settings-shell {
+            width: 100%;
+            max-width: 100%;
+        }
+        .home-hero-top {
+            display:flex;
+            align-items:flex-start;
+            justify-content:space-between;
+            gap:12px;
+            margin-bottom: 12px;
+        }
+        .hero-label {
+            font-size: .76rem;
+            font-weight: 800;
+            opacity: .74;
+            text-transform: uppercase;
+            letter-spacing: .12em;
+        }
+        .balance-label {
+            color: rgba(255,255,255,.7);
+            font-size: .84rem;
+            font-weight: 700;
+        }
+        .balance-amount {
+            font-size: 2.15rem;
+            line-height: 1.05;
+            font-weight: 900;
+            letter-spacing: -0.04em;
+            margin: 6px 0 0;
+            color: #fff;
+        }
+        .hero-mini-chip {
+            display:inline-flex;
+            align-items:center;
+            gap:6px;
+            border-radius:999px;
+            padding:8px 11px;
+            background: rgba(255,255,255,.1);
+            border:1px solid rgba(255,255,255,.12);
+            font-size:.72rem;
+            font-weight:800;
+            white-space:nowrap;
+        }
+        .stats-grid {
+            display:grid;
+            grid-template-columns: repeat(2, minmax(0,1fr));
+            gap: 10px;
+            margin-bottom: 12px;
+        }
+        .stat-item {
+            background: rgba(255,255,255,0.08);
+            border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 18px;
+            padding: 12px;
+        }
+        .stat-item:first-child { border-right: none; }
+        .stat-item .balance-label { margin-bottom: 4px; display: block; }
+        .stat-val {
+            display:block;
+            font-size:1.12rem;
+            font-weight:900;
+            letter-spacing:-0.02em;
+        }
+        .date-control {
+            display:grid;
+            grid-template-columns: 46px 1fr 46px;
+            gap: 10px;
+            align-items:center;
+            background: rgba(255,255,255,0.1);
+            border-radius: 18px;
+            padding: 8px;
+            border: 1px solid rgba(255,255,255,0.1);
+        }
+        .date-input {
+            width:100%;
+            min-width:0;
+            border:none;
+            background: rgba(255,255,255,0.92);
+            height: 44px;
+            border-radius: 14px;
+            padding: 0 12px;
+            font-size: .98rem;
+            font-weight: 800;
+            color: var(--text-main);
+            font-family: inherit;
+        }
+        .circle-btn {
+            width: 46px;
+            height: 44px;
+            border-radius: 14px;
+            border: none;
+            background: rgba(255,255,255,0.14);
+            color: white;
+            display:flex;
+            align-items:center;
+            justify-content:center;
+            font-size: 1rem;
+            font-weight: 900;
+            cursor: pointer;
+        }
+        .circle-btn:active { transform: scale(.98); }
+
+        .overview-grid {
+            display:grid;
+            /* 調整為單行佈局以填滿空間 */
+            grid-template-columns: 1fr;
+            gap: 10px;
+            margin-bottom: 12px;
+            align-items: stretch;
+        }
+        .overview-box,
+        .overview-panel {
+            background: var(--surface);
+            border: 1px solid rgba(255,255,255,0.82);
+            border-radius: 22px;
+            box-shadow: var(--shadow-md);
+            padding: 12px 14px;
+        }
+        .overview-box .k,
+        .overview-panel .k {
+            color: var(--text-sub);
+            font-size: .72rem;
+            font-weight: 800;
+            text-transform: uppercase;
+            letter-spacing: .08em;
+            margin-bottom: 6px;
+        }
+        .overview-box .v,
+        .overview-panel .v {
+            font-size: 1rem;
+            font-weight: 900;
+            color: var(--text-main);
+            line-height:1.15;
+            word-break: break-word;
+        }
+        .overview-panel {
+            display:flex;
+            align-items:center;
+            justify-content:space-between;
+            gap: 12px;
+        }
+        .overview-main {
+            min-width: 0;
+        }
+        .overview-subtext {
+            font-size: .78rem;
+            color: var(--text-sub);
+            font-weight: 700;
+            margin-top: 4px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        .overview-icon {
+            width: 44px;
+            height: 44px;
+            border-radius: 16px;
+            display:flex;
+            align-items:center;
+            justify-content:center;
+            background: linear-gradient(135deg, rgba(37,99,235,0.14), rgba(129,140,248,0.24));
+            color: var(--accent);
+            font-size: 1.25rem;
+            font-weight: 900;
+            flex-shrink: 0;
+        }
+        .overview-pill {
+            display:inline-flex;
+            align-items:center;
+            gap:6px;
+            padding: 6px 10px;
+            border-radius: 999px;
+            background: rgba(15,23,42,0.05);
+            color: var(--text-sub);
+            font-size: .78rem;
+            font-weight: 800;
+            margin-top: 8px;
+        }
+
+        .tx-list { list-style:none; margin:0; padding:0; }
+        .tx-item {
+            display:grid;
+            grid-template-columns: minmax(0,1fr) auto;
+            gap:12px;
+            align-items:center;
+            background: rgba(255,255,255,0.94);
+            padding: 11px 12px;
+            border-radius: 18px;
+            margin-bottom: 8px;
+            border: 1px solid rgba(255,255,255,0.82);
+            box-shadow: 0 8px 18px rgba(15,23,42,0.06);
+            transition: transform .15s ease, box-shadow .15s ease, border-color .15s ease;
+        }
+        .tx-item:active { transform: scale(.992); }
+        .tx-item.selected {
+            border-color: rgba(37,99,235,.35);
+            box-shadow: 0 0 0 3px rgba(37,99,235,.16), 0 8px 18px rgba(15,23,42,0.06);
+            background: #eff6ff;
+        }
+        .tx-desc {
+            display:block;
+            font-size: .96rem;
+            font-weight: 800;
+            color: var(--text-main);
+            line-height: 1.25;
+            margin-bottom: 6px;
+            word-break: break-word;
+            overflow-wrap: anywhere;
+        }
+        .tx-meta {
+            display:flex;
+            align-items:center;
+            gap:8px;
+            flex-wrap:wrap;
+        }
+        .cat-badge {
+            padding: 4px 9px;
+            border-radius: 999px;
+            color: white;
+            font-weight: 800;
+            font-size: .68rem;
+            display:inline-flex;
+            align-items:center;
+            gap: 4px;
+            letter-spacing:.02em;
+        }
+
+        .segmented-control {
+            display:grid;
+            grid-template-columns: repeat(2, minmax(0,1fr));
+            gap: 8px;
+            background: rgba(255,255,255,0.55);
+            border: 1px solid rgba(255,255,255,0.82);
+            padding: 8px;
+            border-radius: 22px;
+            box-shadow: var(--shadow-md);
+            margin-bottom: 12px;
+        }
+        .segment-btn {
+            border:none;
+            background: transparent;
+            min-height: 46px;
+            padding: 10px 12px;
+            border-radius: 16px;
+            color: var(--text-sub);
+            font-size: .92rem;
+            font-weight: 900;
+            transition: all .18s ease;
+        }
+        .segment-btn.active {
+            background: linear-gradient(135deg, #111827 0%, #1d4ed8 100%);
+            color: #fff;
+            box-shadow: 0 12px 20px rgba(29,78,216,0.22);
+        }
+
+        .report-shell, .analysis-shell, .settings-shell { display:flex; flex-direction:column; gap:12px; }
+        .search-grid { display:grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+        .search-input {
+            width:100%;
+            min-width:0;
+            border: 1px solid rgba(148,163,184,0.22);
+            background: rgba(255,255,255,0.92);
+            min-height: 48px;
+            padding: 0 14px;
+            border-radius: 16px;
+            font-size: .95rem;
+            color: var(--text-main);
+            outline: none;
+            font-family: inherit;
+            box-shadow: inset 0 1px 0 rgba(255,255,255,.8);
+        }
+        .search-input:focus { border-color: rgba(37,99,235,.38); box-shadow: 0 0 0 4px rgba(37,99,235,.12); }
+        .primary-btn, .ghost-btn, .danger-btn {
+            width:100%;
+            border:none;
+            min-height: 50px;
+            border-radius: 18px;
+            font-size: .95rem;
+            font-weight: 900;
+            font-family: inherit;
+        }
+        .primary-btn {
+            background: linear-gradient(135deg, #111827 0%, #1d4ed8 100%);
+            color:#fff;
+            box-shadow: 0 16px 24px rgba(29,78,216,0.18);
+        }
+        .ghost-btn {
+            background:#fff;
+            color:var(--text-main);
+            border:1px solid rgba(148,163,184,0.22);
+        }
+        .danger-btn { background:#fff1f2; color:var(--danger); }
+
+        .year-selector-bar {
+            display:flex;
+            align-items:center;
+            justify-content:center;
+            gap: 14px;
+            margin-bottom: 12px;
+        }
+        .year-display {
+            font-size: 1.08rem;
+            font-weight: 900;
+            color: var(--text-main);
+        }
+        .report-table {
+            width:100%;
+            border-collapse: collapse;
+            overflow: hidden;
+        }
+        .report-table th {
+            padding: 12px 10px;
+            text-align:center;
+            font-size: .74rem;
+            color: var(--text-sub);
+            border-bottom: 1px solid rgba(226,232,240,.9);
+            background: rgba(248,250,252,.9);
+            position: sticky;
+            top: 0;
+            z-index: 1;
+        }
+        .report-table td {
+            padding: 13px 10px;
+            font-size: .9rem;
+            border-bottom: 1px solid rgba(226,232,240,.85);
+            text-align:right;
+        }
+        .report-table td:first-child {
+            text-align:left;
+            font-weight: 800;
+            color: var(--text-main);
+            white-space: nowrap;
+        }
+        .comparison-scroll {
+            display:grid;
+            grid-auto-flow: column;
+            grid-auto-columns: minmax(180px, 1fr);
+            gap: 10px;
+            overflow-x: auto;
+            padding-bottom: 4px;
+        }
+        .comparison-card {
+            background: linear-gradient(180deg, rgba(255,255,255,.98), rgba(248,250,252,.95));
+            border: 1px solid rgba(255,255,255,.85);
+            border-radius: 22px;
+            padding: 14px;
+            box-shadow: var(--shadow-md);
+        }
+
+        .progress-container { margin-bottom: 16px; }
+        .progress-header { display:flex; justify-content:space-between; gap:12px; margin-bottom: 8px; font-size: .85rem; font-weight: 800; }
+        .progress-track { height: 12px; border-radius: 999px; background: #e2e8f0; overflow:hidden; }
+        .progress-fill { height:100%; border-radius:999px; transition: width .6s ease; }
+
+        .nav-bar {
+            position: fixed;
+            left: 14px;
+            right: 14px;
+            bottom: calc(env(safe-area-inset-bottom, 0px) + 10px);
+            background: rgba(15,23,42,0.92);
+            backdrop-filter: blur(18px);
+            display:grid;
+            grid-template-columns: repeat(4, minmax(0,1fr));
+            gap: 6px;
+            padding: 10px;
+            border-radius: 24px;
+            z-index: 150;
+            box-shadow: 0 18px 40px rgba(15,23,42,0.28);
+            border: 1px solid rgba(255,255,255,0.08);
+        }
+        .nav-item {
+            border:none;
+            background:none;
+            color: rgba(255,255,255,.62);
+            font-size: .68rem;
+            font-weight: 900;
+            display:flex;
+            flex-direction:column;
+            align-items:center;
+            justify-content:center;
+            gap: 4px;
+            border-radius: 16px;
+            min-height: 54px;
+        }
+        .nav-item.active {
+            color: #fff;
+            background: rgba(255,255,255,.1);
+        }
+        .nav-icon { font-size: 1.2rem; }
+
+        .fab {
+            position: fixed;
+            right: 18px;
+            bottom: 96px;
+            width: 58px;
+            height: 58px;
+            border: none;
+            border-radius: 20px;
+            background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
+            color: #fff;
+            font-size: 1.8rem;
+            box-shadow: 0 18px 30px rgba(37,99,235,0.34);
+            z-index: 135;
+        }
+
+        .modal {
+            display:none;
+            position: fixed;
+            inset: 0;
+            background: rgba(2,6,23,0.58);
+            backdrop-filter: blur(8px);
+            z-index: 600;
+            align-items: flex-end;
+        }
+        .modal.active { display:flex; }
+        .modal-body {
+            width:100%;
+            max-height: 92vh;
+            overflow-y:auto;
+            background: linear-gradient(180deg, rgba(255,255,255,.98), rgba(248,250,252,.98));
+            border-top-left-radius: 28px;
+            border-top-right-radius: 28px;
+            padding: 14px 18px 28px;
+            animation: slideUp .25s ease;
+            box-shadow: 0 -12px 30px rgba(15,23,42,0.15);
+        }
+        @keyframes slideUp { from { transform: translateY(100%);} to { transform: translateY(0);} }
+        .handle { width: 44px; height: 5px; border-radius: 999px; background: #cbd5e1; margin: 0 auto 18px; }
+        .type-segmented {
+            display:grid;
+            grid-template-columns: repeat(2,minmax(0,1fr));
+            gap:8px;
+            padding: 8px;
+            background: rgba(226,232,240,.6);
+            border-radius: 20px;
+            margin-bottom: 16px;
+        }
+        .type-btn {
+            border:none;
+            background: transparent;
+            min-height: 46px;
+            border-radius: 14px;
+            font-size: .95rem;
+            font-weight: 900;
+            color: var(--text-sub);
+        }
+        .type-btn.active.exp { background: #fff1f2; color: var(--danger); }
+        .type-btn.active.inc { background: #ecfdf5; color: var(--success); }
+        .amount-input {
+            width:100%;
+            border:none;
+            background: transparent;
+            text-align:center;
+            font-size: 2.35rem;
+            font-weight: 900;
+            color: var(--text-main);
+            margin-bottom: 12px;
+            letter-spacing: -0.04em;
+            outline: none;
+            font-family: inherit;
+        }
+        .form-label {
+            display:block;
+            font-size: .78rem;
+            font-weight: 900;
+            color: var(--text-sub);
+            margin-bottom: 8px;
+            text-transform: uppercase;
+            letter-spacing: .08em;
+        }
+
+        .action-sheet-item {
+            width:100%;
+            min-height: 52px;
+            border:none;
+            border-radius: 18px;
+            margin-bottom: 10px;
+            background: #fff;
+            font-size: .96rem;
+            font-weight: 900;
+            color: var(--text-main);
+            box-shadow: var(--shadow-md);
+        }
+        .action-sheet-item.danger { color: var(--danger); background: #fff1f2; }
+        .backup-warning { color: var(--danger); font-weight: 900; }
+        .backup-safe { color: var(--success); font-weight: 900; }
+
+        .calc-grid { display:grid; grid-template-columns: repeat(4, minmax(0,1fr)); gap: 10px; margin-bottom: 18px; }
+        .calc-btn {
+            border:none;
+            min-height: 52px;
+            border-radius: 18px;
+            background: #fff;
+            color: var(--text-main);
+            font-size: 1.08rem;
+            font-weight: 900;
+            box-shadow: var(--shadow-md);
+            touch-action: manipulation;
+        }
+        .calc-btn.op { background: #eff6ff; color: var(--accent); }
+        .calc-btn.equal { background: linear-gradient(135deg, #111827 0%, #2563eb 100%); color: #fff; }
+        .calc-btn.clear { background: #fff1f2; color: var(--danger); }
+        .span-2 { grid-column: span 2; }
+
+        #selection-bar {
+            top: 12px !important;
+            left: 14px !important;
+            right: 14px !important;
+            width: auto !important;
+            max-width: calc(100vw - 28px) !important;
+            box-sizing: border-box !important;
+            border-radius: 24px !important;
+            background: rgba(15,23,42,0.94) !important;
+            backdrop-filter: blur(18px);
+            border: 1px solid rgba(255,255,255,0.1);
+            box-shadow: 0 18px 35px rgba(15,23,42,0.28) !important;
+        }
+
+        .report-floatbar {
+            position: fixed;
+            left: 14px;
+            right: 14px;
+            bottom: 92px;
+            z-index: 260;
+            display: none;
+            background: rgba(255,255,255,0.94);
+            border: 1px solid rgba(255,255,255,0.82);
+            border-radius: 24px;
+            box-shadow: 0 20px 40px rgba(15,23,42,0.14);
+            backdrop-filter: blur(18px);
+            overflow: hidden;
+        }
+        .rfb-top { display:flex; align-items:center; justify-content:space-between; gap:10px; padding: 12px 14px; }
+        .rfb-title { font-weight: 900; color: var(--text-main); font-size: .96rem; }
+        .rfb-summary { display:flex; align-items:center; gap:8px; justify-content:flex-end; flex:1; font-weight: 900; }
+        .rfb-pill { display:inline-flex; align-items:center; gap:6px; padding: 8px 10px; border-radius:999px; border: 1px solid rgba(148,163,184,0.16); background:#f8fafc; font-size:.8rem; font-weight:900; }
+        .rfb-pill .k { color: var(--text-sub); font-weight: 800; font-size: .74rem; }
+        .rfb-net { color: var(--text-main); }
+        .rfb-toggle { border:none; background:#eff6ff; color: var(--accent); border-radius: 14px; min-width: 42px; min-height: 42px; font-weight: 900; }
+        .rfb-expand { border-top: 1px solid rgba(226,232,240,.9); padding: 12px 14px 14px; }
+        .rfb-btns { display:flex; flex-wrap:wrap; gap:8px; margin-bottom:10px; }
+        .rfb-btn { border:none; border-radius: 14px; padding: 10px 12px; font-size: .82rem; font-weight: 900; background:#eff6ff; color: var(--accent); }
+        .rfb-btn.danger { background:#fff1f2; color: var(--danger); }
+        .rfb-stats { display:grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap:10px; }
+        .rfb-box { background:#f8fafc; border:1px solid rgba(226,232,240,.9); border-radius: 18px; padding: 10px; text-align:center; }
+        .rfb-box .k { font-size: .72rem; color: var(--text-sub); font-weight: 900; }
+        .rfb-box .v { margin-top: 3px; font-size: 1.02rem; font-weight: 900; }
+        .rfb-hint { margin-top: 8px; color: var(--text-sub); font-size: .76rem; font-weight: 800; }
+        .report-floatbar.collapsed .rfb-expand { display:none; }
+
+        /* 學校設定區專用 */
+        .school-set-item {
+            display: flex; justify-content: space-between; align-items: center;
+            background: rgba(255,255,255,0.9); border: 1px solid rgba(148,163,184,0.2);
+            padding: 10px 12px; border-radius: 16px; margin-bottom: 8px;
+        }
+        .school-set-name { font-weight: 800; color: var(--text-main); font-size: 0.95rem; }
+        .school-set-rate { color: var(--success); font-size: 0.8rem; font-weight: 700; margin-left: 6px; }
+        .school-set-actions button {
+            background: #f1f5f9; border: none; border-radius: 8px; padding: 6px 10px;
+            font-size: 0.75rem; font-weight: 700; color: var(--text-sub); margin-left: 6px;
+        }
+
+        .instant-option-grid {
+            display:grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 8px;
+            margin-top: 8px;
+        }
+        .instant-option-btn {
+            border: 1px solid rgba(148,163,184,0.22);
+            background: rgba(255,255,255,0.92);
+            min-height: 46px;
+            border-radius: 15px;
+            padding: 9px 10px;
+            color: var(--text-main);
+            font-size: .88rem;
+            font-weight: 900;
+            font-family: inherit;
+            box-shadow: 0 6px 14px rgba(15,23,42,0.05);
+            text-align: center;
+            touch-action: manipulation;
+        }
+        .instant-option-btn.active {
+            background: linear-gradient(135deg, #111827 0%, #1d4ed8 100%);
+            color: #fff;
+            border-color: rgba(37,99,235,0.35);
+            box-shadow: 0 12px 20px rgba(29,78,216,0.22);
+        }
+        .instant-option-btn:active { transform: scale(.98); }
+        .instant-option-grid.school-options {
+            grid-template-columns: 1fr;
+        }
+
+        @media (max-width: 420px) {
+            header { padding-left: 14px; padding-right: 14px; }
+            .page { padding-left: 12px; padding-right: 12px; }
+            .balance-amount { font-size: 1.95rem; }
+            /* 此處原本為 1fr，上方主 CSS 已調整，這裡可保留以確保兼容性 */
+            .overview-grid { grid-template-columns: 1fr; }
+            .search-grid { grid-template-columns: 1fr; }
+            .comparison-scroll { grid-auto-columns: 86%; }
+            .home-hero { padding: 14px; border-radius: 24px; }
+            .tx-item { padding: 10px 11px; }
+            #selection-bar {
+                left: 10px !important;
+                right: 10px !important;
+                max-width: calc(100vw - 20px) !important;
+                padding: 12px 14px !important;
+                gap: 8px;
+            }
+            #selection-bar > div { min-width: 0; }
+            #selection-bar span, #selection-bar div, #selection-bar button { max-width: 100%; }
+        }
+
+
+        /* =========================================================
+           Eddie Pro v17 — Editorial Ledger / S23 Ultra
+           全新視覺語言：暖象牙 × 炭黑 × 珊瑚橘
+           保留既有 HTML / JavaScript 功能邏輯
+           ========================================================= */
+        :root {
+            --primary: #211f1b;
+            --primary-2: #2d2a25;
+            --accent: #ee6a3b;
+            --accent-2: #ff8a5f;
+            --accent-soft: #fff0e9;
+            --success: #23836b;
+            --danger: #c74c52;
+            --warning: #b9822a;
+            --surface: #fffdf8;
+            --surface-2: #ffffff;
+            --surface-muted: #f1ece2;
+            --bg: #f2ede4;
+            --text-main: #23211d;
+            --text-sub: #777066;
+            --border: #d8d0c3;
+            --radius: 18px;
+            --shadow-lg: 0 9px 0 rgba(33,31,27,.07), 0 14px 30px rgba(33,31,27,.08);
+            --shadow-md: 0 5px 0 rgba(33,31,27,.055), 0 9px 20px rgba(33,31,27,.07);
+            --cat-food: #d98b2b;
+            --cat-transport: #3c7b88;
+            --cat-ent: #8a5c87;
+            --cat-life: #4f8a67;
+            --cat-other: #7b746a;
+        }
+
+        * { -webkit-tap-highlight-color: transparent; }
+
+        html {
+            min-height: 100%;
+            background: #e9e2d7;
+            -webkit-text-size-adjust: 100%;
+            text-size-adjust: 100%;
+            overscroll-behavior: none;
+        }
+
+        body {
+            margin: 0;
+            min-height: 100dvh;
+            background:
+                linear-gradient(rgba(79,72,61,.035) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(79,72,61,.035) 1px, transparent 1px),
+                #f2ede4 !important;
+            background-size: 24px 24px !important;
+            color: var(--text-main);
+            font-family: Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", "Noto Sans TC", "PingFang TC", sans-serif;
+            font-size: 16px;
+            line-height: 1.42;
+            padding-bottom: calc(env(safe-area-inset-bottom, 0px) + 104px) !important;
+            overflow-x: hidden;
+            overscroll-behavior-y: contain;
+        }
+
+        body::before {
+            content: "";
+            position: fixed;
+            inset: 0;
+            pointer-events: none;
+            z-index: -1;
+            background:
+                radial-gradient(circle at 100% 0, rgba(238,106,59,.12), transparent 31%),
+                radial-gradient(circle at 0 76%, rgba(35,131,107,.07), transparent 28%);
+        }
+
+        body.modal-open { position: fixed; inset: 0; width: 100%; overflow: hidden; }
+
+        .page {
+            display: none;
+            width: min(100%, 520px) !important;
+            max-width: 520px !important;
+            margin: 0 auto !important;
+            padding: 0 14px 4px !important;
+            overflow-x: hidden;
+            animation: pageLift .24s ease;
+        }
+        .page.active { display: block; }
+        .page.report-pad { padding-bottom: 228px !important; }
+        @keyframes pageLift { from { opacity: 0; transform: translateY(7px); } to { opacity: 1; transform: translateY(0); } }
+
+        /* ---------- Top title / editorial masthead ---------- */
+        .page > header {
+            position: sticky !important;
+            top: 0;
+            z-index: 90;
+            margin: 0 -14px 14px !important;
+            padding: calc(env(safe-area-inset-top, 0px) + 16px) 18px 12px !important;
+            background: rgba(242,237,228,.94) !important;
+            backdrop-filter: blur(14px) saturate(120%);
+            border: 0 !important;
+            border-bottom: 1px solid rgba(92,83,70,.14) !important;
+        }
+        .header-shell { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+        .header-kicker {
+            display: inline-flex !important;
+            align-items: center;
+            min-height: 22px;
+            margin: 0 0 5px !important;
+            padding: 3px 8px;
+            border-radius: 4px;
+            background: var(--accent) !important;
+            color: #fff9f2 !important;
+            font-size: .61rem !important;
+            font-weight: 900 !important;
+            letter-spacing: .14em !important;
+            text-transform: uppercase;
+        }
+        h1 {
+            margin: 0 !important;
+            color: var(--text-main) !important;
+            font-size: 1.34rem !important;
+            line-height: 1.05;
+            font-weight: 950 !important;
+            letter-spacing: -.045em !important;
+        }
+        .header-badge {
+            min-height: 38px;
+            padding: 0 11px !important;
+            border-radius: 10px !important;
+            background: transparent !important;
+            border: 1px solid var(--text-main) !important;
+            box-shadow: none !important;
+            color: var(--text-main) !important;
+            font-size: .66rem !important;
+            font-weight: 900 !important;
+            letter-spacing: .01em;
+        }
+
+        /* ---------- Home statement card ---------- */
+        .home-hero {
+            position: relative;
+            isolation: isolate;
+            overflow: hidden;
+            margin: 0 0 12px !important;
+            padding: 18px !important;
+            border-radius: 16px !important;
+            background: var(--primary) !important;
+            color: #fffaf2 !important;
+            border: 1px solid #11100e !important;
+            box-shadow: 7px 7px 0 rgba(33,31,27,.14) !important;
+        }
+        .home-hero::before {
+            content: "";
+            position: absolute;
+            right: -38px;
+            top: -52px;
+            width: 150px;
+            height: 150px;
+            border-radius: 50%;
+            background: var(--accent);
+            z-index: -1;
+            opacity: .96;
+        }
+        .home-hero::after {
+            content: "";
+            position: absolute;
+            right: 48px;
+            top: 43px;
+            width: 34px;
+            height: 34px;
+            border-radius: 50%;
+            border: 7px solid rgba(255,250,242,.18);
+            z-index: -1;
+        }
+        .home-hero-top { margin-bottom: 16px !important; align-items: flex-start !important; }
+        .hero-label {
+            color: #cfc7bb !important;
+            opacity: 1 !important;
+            font-size: .65rem !important;
+            font-weight: 900 !important;
+            letter-spacing: .18em !important;
+        }
+        .balance-label { color: #bdb5a9 !important; font-size: .76rem !important; font-weight: 800 !important; }
+        .balance-amount {
+            margin-top: 7px !important;
+            color: #fffaf2 !important;
+            font-size: clamp(2.15rem, 10vw, 3rem) !important;
+            font-weight: 950 !important;
+            letter-spacing: -.065em !important;
+            font-variant-numeric: tabular-nums;
+        }
+        .hero-mini-chip {
+            margin-top: 2px;
+            padding: 7px 9px !important;
+            border-radius: 6px !important;
+            background: #fffaf2 !important;
+            border: 0 !important;
+            color: var(--primary) !important;
+            font-size: .62rem !important;
+            font-weight: 950 !important;
+            box-shadow: 3px 3px 0 rgba(0,0,0,.16);
+        }
+        .stats-grid {
+            gap: 1px !important;
+            margin: 0 0 14px !important;
+            overflow: hidden;
+            border-radius: 12px;
+            border: 1px solid rgba(255,250,242,.18);
+            background: rgba(255,250,242,.18);
+        }
+        .stat-item {
+            min-height: 70px;
+            padding: 11px 12px !important;
+            border: 0 !important;
+            border-radius: 0 !important;
+            background: #2b2924 !important;
+        }
+        .stat-item .balance-label { color: #aaa196 !important; font-size: .69rem !important; }
+        .stat-val { margin-top: 5px; color: #fffaf2; font-size: 1.05rem !important; font-weight: 950 !important; }
+
+        #dash-school-breakdown {
+            border-radius: 10px !important;
+            border-color: rgba(255,250,242,.16) !important;
+            background: rgba(255,250,242,.07) !important;
+        }
+        .date-control {
+            grid-template-columns: 44px 1fr 44px !important;
+            gap: 6px !important;
+            padding: 5px !important;
+            border-radius: 11px !important;
+            border: 1px solid rgba(255,250,242,.22) !important;
+            background: #141311 !important;
+        }
+        .date-input {
+            height: 44px !important;
+            border-radius: 7px !important;
+            background: #fffaf2 !important;
+            color: var(--text-main) !important;
+            font-size: .92rem !important;
+            font-weight: 900 !important;
+        }
+        .circle-btn {
+            width: 44px !important;
+            height: 44px !important;
+            border-radius: 7px !important;
+            background: transparent !important;
+            color: #fffaf2 !important;
+        }
+
+        /* ---------- Bento / cards ---------- */
+        .card,
+        .overview-box,
+        .overview-panel,
+        .comparison-card {
+            background: var(--surface) !important;
+            border: 1px solid var(--border) !important;
+            border-radius: 14px !important;
+            box-shadow: none !important;
+            backdrop-filter: none !important;
+        }
+        .card { margin-bottom: 12px !important; padding: 15px !important; }
+        .overview-grid { display: grid !important; grid-template-columns: 1fr !important; gap: 10px !important; margin-bottom: 14px !important; }
+        .overview-panel {
+            position: relative;
+            padding: 14px 14px 14px 17px !important;
+            overflow: hidden;
+        }
+        .overview-panel::before {
+            content: "";
+            position: absolute;
+            left: 0; top: 0; bottom: 0;
+            width: 5px;
+            background: var(--accent);
+        }
+        .overview-box .k, .overview-panel .k {
+            margin-bottom: 4px !important;
+            color: var(--text-sub) !important;
+            font-size: .65rem !important;
+            font-weight: 900 !important;
+            letter-spacing: .11em !important;
+        }
+        .overview-box .v, .overview-panel .v { color: var(--text-main) !important; font-size: .98rem !important; font-weight: 950 !important; }
+        .overview-icon {
+            width: 46px !important; height: 46px !important;
+            border-radius: 8px !important;
+            background: var(--accent) !important;
+            color: #fff !important;
+            font-size: 1.25rem !important;
+            box-shadow: 3px 3px 0 #d7c9bb;
+        }
+        .overview-pill { background: var(--surface-muted) !important; color: var(--text-sub) !important; border-radius: 6px !important; }
+
+        .panel-title,
+        .section-title {
+            color: #6c645b !important;
+            font-size: .68rem !important;
+            font-weight: 950 !important;
+            letter-spacing: .13em !important;
+            text-transform: uppercase !important;
+        }
+        .section-title { margin: 17px 1px 9px !important; }
+        .section-title > span:first-child { color: var(--text-main) !important; font-size: .78rem !important; letter-spacing: .06em !important; }
+        .section-title > span:last-child {
+            padding: 4px 7px;
+            border-radius: 4px;
+            background: #ded6ca;
+            color: #6d655b !important;
+            font-size: .58rem !important;
+        }
+
+        /* ---------- Transaction ledger rows ---------- */
+        .tx-list { display: flex; flex-direction: column; gap: 8px; }
+        .tx-item {
+            position: relative;
+            margin: 0 !important;
+            padding: 13px 13px 13px 16px !important;
+            border: 1px solid #d9d1c5 !important;
+            border-radius: 12px !important;
+            background: #fffdf8 !important;
+            box-shadow: none !important;
+            overflow: hidden;
+        }
+        .tx-item::before {
+            content: "";
+            position: absolute;
+            left: 0; top: 10px; bottom: 10px;
+            width: 4px;
+            border-radius: 0 4px 4px 0;
+            background: var(--accent);
+        }
+        .tx-item:active { transform: translateY(1px) scale(.997) !important; background: #fbf6ed !important; }
+        .tx-item.selected {
+            border-color: var(--primary) !important;
+            background: #f7efe5 !important;
+            box-shadow: inset 0 0 0 1px var(--primary) !important;
+        }
+        .tx-desc { margin-bottom: 7px !important; color: var(--text-main) !important; font-size: .95rem !important; font-weight: 950 !important; }
+        .tx-meta { gap: 5px !important; }
+        .cat-badge {
+            padding: 4px 7px !important;
+            border-radius: 5px !important;
+            font-size: .61rem !important;
+            font-weight: 900 !important;
+            letter-spacing: .02em !important;
+            box-shadow: none !important;
+        }
+
+        /* ---------- Segments become editorial tabs ---------- */
+        .segmented-control {
+            display: grid !important;
+            grid-template-columns: repeat(2,minmax(0,1fr)) !important;
+            gap: 7px !important;
+            margin-bottom: 12px !important;
+            padding: 0 !important;
+            background: transparent !important;
+            border: 0 !important;
+            border-radius: 0 !important;
+            box-shadow: none !important;
+        }
+        .segment-btn {
+            min-height: 46px !important;
+            border: 1px solid var(--border) !important;
+            border-radius: 9px !important;
+            background: #fffdf8 !important;
+            color: #746d63 !important;
+            font-size: .83rem !important;
+            font-weight: 950 !important;
+            box-shadow: none !important;
+        }
+        .segment-btn.active {
+            background: var(--primary) !important;
+            border-color: var(--primary) !important;
+            color: #fffaf2 !important;
+            box-shadow: 4px 4px 0 rgba(33,31,27,.14) !important;
+        }
+
+        /* ---------- Inputs / buttons ---------- */
+        .search-grid { gap: 9px !important; }
+        .search-input {
+            min-height: 50px !important;
+            padding: 0 13px !important;
+            border: 1px solid #d8d0c3 !important;
+            border-radius: 9px !important;
+            background: #fffdf8 !important;
+            color: var(--text-main) !important;
+            font-size: .92rem !important;
+            font-weight: 750 !important;
+            box-shadow: none !important;
+        }
+        .search-input:focus {
+            border-color: var(--primary) !important;
+            box-shadow: 0 0 0 3px rgba(238,106,59,.14) !important;
+            outline: none !important;
+        }
+        .primary-btn, .ghost-btn, .danger-btn {
+            min-height: 51px !important;
+            border-radius: 9px !important;
+            font-size: .9rem !important;
+            font-weight: 950 !important;
+            box-shadow: none !important;
+        }
+        .primary-btn {
+            background: var(--primary) !important;
+            color: #fffaf2 !important;
+            border: 1px solid var(--primary) !important;
+            box-shadow: 4px 4px 0 rgba(33,31,27,.14) !important;
+        }
+        .ghost-btn { background: #fffdf8 !important; color: var(--text-main) !important; border: 1px solid #bfb5a7 !important; }
+        .danger-btn { background: #fff3ef !important; color: var(--danger) !important; border: 1px solid #efc8c5 !important; }
+        .primary-btn:active, .ghost-btn:active, .danger-btn:active { transform: translate(1px,1px) !important; box-shadow: none !important; }
+
+        /* ---------- Reports ---------- */
+        .report-shell, .analysis-shell, .settings-shell { gap: 10px !important; }
+        .year-selector-bar { gap: 12px !important; }
+        .year-display { color: var(--text-main) !important; font-size: 1.18rem !important; font-weight: 950 !important; }
+        .report-table { border-collapse: separate !important; border-spacing: 0 !important; }
+        .report-table th {
+            top: 0;
+            padding: 10px 8px !important;
+            background: #ede6db !important;
+            color: #746d63 !important;
+            border-bottom: 1px solid #cfc5b7 !important;
+            font-size: .64rem !important;
+            font-weight: 950 !important;
+            letter-spacing: .04em;
+        }
+        .report-table td {
+            padding: 12px 8px !important;
+            background: #fffdf8;
+            border-bottom: 1px solid #e7dfd4 !important;
+            color: var(--text-main);
+            font-size: .84rem !important;
+        }
+        .report-table td:first-child { color: var(--text-main) !important; font-weight: 950 !important; }
+        .comparison-scroll { gap: 9px !important; scrollbar-width: none; }
+        .comparison-scroll::-webkit-scrollbar { display: none; }
+        .comparison-card { padding: 14px !important; }
+        .progress-track { height: 10px !important; background: #ddd5c9 !important; border-radius: 3px !important; }
+        .progress-fill { border-radius: 3px !important; }
+
+        /* ---------- Settings school rows ---------- */
+        .school-set-item {
+            padding: 12px !important;
+            border: 1px solid #d8d0c3 !important;
+            border-radius: 10px !important;
+            background: #fffdf8 !important;
+        }
+        .school-set-name { color: var(--text-main) !important; font-weight: 950 !important; }
+        .school-set-rate { color: var(--success) !important; }
+        .school-set-actions button {
+            min-height: 36px;
+            padding: 0 10px !important;
+            border: 1px solid #d7cec1 !important;
+            border-radius: 7px !important;
+            background: #f0e9df !important;
+            color: #655e55 !important;
+            font-weight: 900 !important;
+        }
+
+        /* ---------- Bottom dock: totally different from old dark floating bar ---------- */
+        .nav-bar {
+            position: fixed !important;
+            left: 50% !important;
+            right: auto !important;
+            bottom: max(8px, env(safe-area-inset-bottom, 0px)) !important;
+            transform: translateX(-50%);
+            width: min(calc(100vw - 18px), 500px) !important;
+            height: 74px;
+            padding: 7px !important;
+            display: grid !important;
+            grid-template-columns: repeat(4,minmax(0,1fr)) !important;
+            gap: 4px !important;
+            border: 1px solid #bdb3a5 !important;
+            border-radius: 14px !important;
+            background: rgba(255,253,248,.97) !important;
+            backdrop-filter: blur(16px) saturate(120%) !important;
+            box-shadow: 0 10px 30px rgba(45,39,32,.16), 4px 4px 0 rgba(33,31,27,.08) !important;
+            z-index: 150;
+        }
+        .nav-item {
+            min-height: 58px !important;
+            padding: 6px 3px !important;
+            gap: 3px !important;
+            border-radius: 8px !important;
+            color: #7f776c !important;
+            font-size: .61rem !important;
+            font-weight: 900 !important;
+        }
+        .nav-icon {
+            display: grid;
+            place-items: center;
+            width: 28px; height: 28px;
+            border-radius: 7px;
+            background: #eee7dc;
+            color: #5d564d;
+            font-size: 1rem !important;
+            line-height: 1;
+        }
+        .nav-item.active { background: transparent !important; color: var(--text-main) !important; }
+        .nav-item.active .nav-icon {
+            background: var(--accent) !important;
+            color: #fff !important;
+            box-shadow: 2px 2px 0 #d8c8ba;
+        }
+
+        .fab {
+            right: max(16px, calc((100vw - 500px)/2 + 16px)) !important;
+            bottom: calc(env(safe-area-inset-bottom, 0px) + 91px) !important;
+            width: 58px !important;
+            height: 58px !important;
+            border-radius: 14px !important;
+            background: var(--accent) !important;
+            border: 2px solid var(--primary) !important;
+            color: #fff !important;
+            font-size: 1.85rem !important;
+            line-height: 1;
+            box-shadow: 5px 5px 0 var(--primary) !important;
+        }
+        .fab:active { transform: translate(2px,2px) !important; box-shadow: 2px 2px 0 var(--primary) !important; }
+
+        /* ---------- Bottom sheets / modals ---------- */
+        .modal {
+            background: rgba(35,31,27,.58) !important;
+            backdrop-filter: blur(4px) !important;
+            align-items: flex-end !important;
+        }
+        .modal-body {
+            width: min(100%, 520px) !important;
+            max-height: min(91dvh, 900px) !important;
+            margin: 0 auto !important;
+            padding: 13px 15px calc(env(safe-area-inset-bottom, 0px) + 24px) !important;
+            border: 1px solid #c8beb0 !important;
+            border-bottom: 0 !important;
+            border-radius: 18px 18px 0 0 !important;
+            background: #f8f3ea !important;
+            box-shadow: 0 -12px 34px rgba(35,31,27,.22) !important;
+        }
+        .handle { width: 56px !important; height: 4px !important; margin-bottom: 16px !important; border-radius: 2px !important; background: #aaa093 !important; }
+        .type-segmented {
+            gap: 6px !important;
+            padding: 5px !important;
+            border: 1px solid #d4cabc;
+            border-radius: 11px !important;
+            background: #e9e1d5 !important;
+        }
+        .type-btn { min-height: 45px !important; border-radius: 7px !important; color: #726a60 !important; font-weight: 950 !important; }
+        .type-btn.active.exp { background: #fff2ef !important; color: var(--danger) !important; box-shadow: inset 0 0 0 1px #e6bdbb !important; }
+        .type-btn.active.inc { background: #edf7f2 !important; color: var(--success) !important; box-shadow: inset 0 0 0 1px #bcd8cb !important; }
+        .amount-input {
+            margin: 4px 0 10px !important;
+            color: var(--text-main) !important;
+            font-size: 2.45rem !important;
+            font-weight: 950 !important;
+            letter-spacing: -.06em !important;
+            font-variant-numeric: tabular-nums;
+        }
+        .amount-input::placeholder { color: #b8afa3 !important; }
+        .form-label {
+            margin-bottom: 7px !important;
+            color: #6d655c !important;
+            font-size: .66rem !important;
+            font-weight: 950 !important;
+            letter-spacing: .11em !important;
+        }
+        #income-fields {
+            border: 1px solid #bed7ca !important;
+            border-radius: 11px !important;
+            background: #edf5f0 !important;
+        }
+        .calc-grid { gap: 7px !important; margin-bottom: 15px !important; }
+        .calc-btn {
+            min-height: 52px !important;
+            border: 1px solid #d6cdbf !important;
+            border-radius: 9px !important;
+            background: #fffdf8 !important;
+            color: var(--text-main) !important;
+            font-size: 1rem !important;
+            font-weight: 950 !important;
+            box-shadow: none !important;
+        }
+        .calc-btn.op { background: #eee6da !important; color: #665f56 !important; }
+        .calc-btn.equal { background: var(--accent) !important; border-color: var(--accent) !important; color: #fff !important; }
+        .calc-btn.clear { background: #fff0ed !important; border-color: #ebc3bd !important; color: var(--danger) !important; }
+        .calc-btn:active { transform: translateY(1px) !important; background: #f6eee3 !important; }
+
+        .instant-option-grid { gap: 7px !important; }
+        .instant-option-btn {
+            min-height: 45px !important;
+            border: 1px solid #d4cbbc !important;
+            border-radius: 8px !important;
+            background: #fffdf8 !important;
+            color: var(--text-main) !important;
+            font-size: .82rem !important;
+            font-weight: 900 !important;
+            box-shadow: none !important;
+        }
+        .instant-option-btn.active {
+            background: var(--primary) !important;
+            border-color: var(--primary) !important;
+            color: #fffaf2 !important;
+            box-shadow: 3px 3px 0 rgba(33,31,27,.13) !important;
+        }
+        .instant-option-btn:active { transform: translate(1px,1px) !important; }
+
+        .action-sheet-item {
+            min-height: 52px !important;
+            border: 1px solid #d6cdbf !important;
+            border-radius: 9px !important;
+            background: #fffdf8 !important;
+            color: var(--text-main) !important;
+            box-shadow: none !important;
+            font-size: .9rem !important;
+            font-weight: 950 !important;
+        }
+        .action-sheet-item.danger { background: #fff1ee !important; border-color: #ecc5bf !important; color: var(--danger) !important; }
+
+        /* ---------- Selection + report floating bar ---------- */
+        #selection-bar {
+            top: calc(env(safe-area-inset-top, 0px) + 10px) !important;
+            left: max(10px, calc((100vw - 500px)/2 + 10px)) !important;
+            right: max(10px, calc((100vw - 500px)/2 + 10px)) !important;
+            min-height: 60px !important;
+            padding: 9px 12px !important;
+            border: 1px solid #11100e !important;
+            border-radius: 12px !important;
+            background: var(--primary) !important;
+            box-shadow: 5px 5px 0 rgba(33,31,27,.22) !important;
+        }
+        .report-floatbar {
+            left: max(10px, calc((100vw - 500px)/2 + 10px)) !important;
+            right: max(10px, calc((100vw - 500px)/2 + 10px)) !important;
+            bottom: calc(env(safe-area-inset-bottom, 0px) + 88px) !important;
+            border: 1px solid #c9bfb1 !important;
+            border-radius: 13px !important;
+            background: rgba(255,253,248,.98) !important;
+            box-shadow: 5px 5px 0 rgba(33,31,27,.10), 0 12px 28px rgba(33,31,27,.12) !important;
+            backdrop-filter: blur(14px) !important;
+        }
+        .rfb-top { padding: 10px 11px !important; }
+        .rfb-title { color: var(--text-main) !important; font-weight: 950 !important; }
+        .rfb-pill { border: 1px solid #ddd4c8 !important; border-radius: 7px !important; background: #f2ece3 !important; }
+        .rfb-toggle { min-width: 38px !important; min-height: 38px !important; border-radius: 7px !important; background: var(--accent-soft) !important; color: var(--accent) !important; }
+        .rfb-btn { border-radius: 7px !important; background: #f0e9df !important; color: var(--text-main) !important; }
+        .rfb-btn.danger { background: #fff1ee !important; color: var(--danger) !important; }
+        .rfb-box { border: 1px solid #ddd3c6 !important; border-radius: 9px !important; background: #fffdf8 !important; }
+
+        .backup-warning, .backup-safe {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 34px;
+            padding: 7px 9px;
+            border-radius: 6px;
+            font-size: .72rem;
+            font-weight: 900;
+        }
+        .backup-warning { background: #fff3df !important; color: #966615 !important; }
+        .backup-safe { background: #eaf5ef !important; color: #1e775f !important; }
+
+        /* ---------- Compact S23 Ultra rules ---------- */
+        @media (max-width: 420px) {
+            .page { padding-left: 11px !important; padding-right: 11px !important; }
+            .page > header { margin-left: -11px !important; margin-right: -11px !important; padding-left: 15px !important; padding-right: 15px !important; }
+            .home-hero { padding: 16px !important; }
+            .balance-amount { font-size: 2.35rem !important; }
+            .stat-item { min-height: 66px; padding: 10px !important; }
+            .search-grid { grid-template-columns: 1fr !important; }
+            .comparison-scroll { grid-auto-columns: 88% !important; }
+            .modal-body { padding-left: 13px !important; padding-right: 13px !important; }
+            .tx-item { grid-template-columns: minmax(0,1fr) auto !important; gap: 9px !important; }
+        }
+        @media (max-width: 360px) {
+            .header-badge { display: none !important; }
+            .home-hero::before { right: -58px; }
+            .balance-amount { font-size: 2.05rem !important; }
+            .stat-val { font-size: .95rem !important; }
+            .nav-item { font-size: .56rem !important; }
+            .rfb-title { display: none !important; }
+        }
+        @media (min-width: 700px) {
+            body { background-color: #e9e2d7 !important; }
+            .page { max-width: 520px !important; }
+        }
+        @media (prefers-reduced-motion: reduce) {
+            *, *::before, *::after { animation-duration: .01ms !important; animation-iteration-count: 1 !important; transition-duration: .01ms !important; scroll-behavior: auto !important; }
+        }
+
+    </style>
+</head>
+<body>
+
+    <div id="selection-bar" style="position:fixed; top:25px; left:20px; right:20px; background:var(--primary); color:white; padding:15px 25px; border-radius:22px; display:none; justify-content:space-between; align-items:center; z-index:1000; box-shadow:0 15px 35px rgba(0,0,0,0.3);">
+        <div style="display:flex; align-items:center; gap:15px;">
+            <button onclick="clearSelection()" style="background:none; border:none; color:white; font-size:1.2rem;">✕</button>
+            <div><span id="sel-count" style="font-weight:800;">0</span> 筆已選</div>
+        </div>
+        <div style="display:flex; align-items:center; gap:20px;">
+            <span id="sel-total" style="font-weight:700; opacity:0.9;">$0</span>
+            <button onclick="bulkDelete()" style="background:var(--danger); border:none; color:white; width:40px; height:40px; border-radius:12px; display:flex; align-items:center; justify-content:center;">🗑️</button>
+        </div>
+    </div>
+
+    <div id="bulk-delete-confirm-modal" class="modal" style="z-index: 9999;">
+        <div class="modal-body" style="padding-bottom: 30px;">
+            <div class="handle"></div>
+            <h3 style="margin:0 0 15px 0; text-align:center; font-weight:800; color:var(--danger);">確認刪除</h3>
+            <div style="text-align:center; font-size:0.9rem; color:var(--text-sub); margin-bottom:20px;" id="bulk-delete-text">確定要刪除選取的紀錄嗎？</div>
+            <button class="primary-btn" style="background:#fff1f2; color:var(--danger); margin-bottom:10px;" onclick="executeBulkDelete()">確定刪除</button>
+            <button class="ghost-btn" onclick="cancelBulkDelete()">取消</button>
+        </div>
+    </div>
+
+    <!-- 全域系統通知與確認用彈窗 (完美取代被阻擋的 confirm) -->
+    <div id="system-confirm-modal" class="modal" style="z-index: 9999;">
+        <div class="modal-body" style="padding-bottom: 30px;">
+            <div class="handle"></div>
+            <h3 style="margin:0 0 15px 0; text-align:center; font-weight:800;" id="sys-confirm-title">系統確認</h3>
+            <div style="text-align:center; font-size:0.95rem; color:var(--text-sub); margin-bottom:20px; white-space:pre-wrap; line-height:1.5; font-weight:700;" id="sys-confirm-text">...</div>
+            <button class="primary-btn" id="sys-confirm-btn" style="margin-bottom:10px;" onclick="executeSystemConfirm()">確定</button>
+            <button class="ghost-btn" onclick="closeSystemConfirm()">取消 / 關閉</button>
+        </div>
+    </div>
+
+    <div id="page-home" class="page active">
+        <header>
+            <div class="header-shell">
+                <div>
+                    <div class="header-kicker">PRIVATE LEDGER</div>
+                    <h1>Eddie Pro 收支管家</h1>
+                </div>
+                <div class="header-badge">ON DEVICE</div>
+            </div>
+        </header>
+
+        <section class="home-hero">
+            <div class="home-hero-top">
+                <div>
+                    <div class="hero-label">CURRENT MONTH</div>
+                    <div class="balance-label" id="dash-month-label">數據計算中...</div>
+                    <div class="balance-amount" id="dash-balance">$0</div>
+                </div>
+                <div class="hero-mini-chip">LEDGER 01</div>
+            </div>
+
+            <div class="stats-grid">
+                <div class="stat-item">
+                    <span class="balance-label">總收入</span>
+                    <span class="stat-val" id="dash-inc-total" style="color:#79d9b6;">+0</span>
+                </div>
+                <div class="stat-item">
+                    <span class="balance-label">總支出</span>
+                    <span class="stat-val" id="dash-exp" style="color:#ff9b87;">-0</span>
+                </div>
+                <div class="stat-item">
+                    <span class="balance-label" style="display:flex; align-items:center; gap:4px;">🏫 學校收入</span>
+                    <span class="stat-val" id="dash-inc-school" style="color:#a8d7a9;">+0</span>
+                </div>
+                <div class="stat-item">
+                    <span class="balance-label" style="display:flex; align-items:center; gap:4px;">📦 一般收入</span>
+                    <span class="stat-val" id="dash-inc-general" style="color:#ffb08d;">+0</span>
+                </div>
+            </div>
+
+            <!-- 月度學校收入加總儀表板 (會隨每日紀錄動態更新) -->
+            <div id="dash-school-breakdown" style="display:none; margin-bottom: 12px; padding: 12px; background: rgba(255,255,255,0.1); border-radius: 18px; border: 1px solid rgba(255,255,255,0.15);">
+                <!-- JS 動態生成 -->
+            </div>
+
+            <div class="date-control">
+                <button class="circle-btn" onclick="changeDate(-1)">❮</button>
+                <input type="date" id="currentDate" class="date-input" onchange="renderHome()">
+                <button class="circle-btn" onclick="changeDate(1)">❯</button>
+            </div>
+        </section>
+
+        <!-- 修改點：移除操作提示區塊，並使今日加總佔滿寬度 -->
+        <section class="overview-grid">
+            <div class="overview-panel">
+                <div class="overview-main">
+                    <div class="k">今日加總</div>
+                    <div class="v" id="dash-daily-sum">收:0 / 支:0</div>
+                </div>
+                <div class="overview-icon">∑</div>
+            </div>
+        </section>
+
+        <div class="section-title">
+            <span>今日明細紀錄</span>
+            <span>可長按多選</span>
+        </div>
+        <ul id="tx-list" class="tx-list"></ul>
+    </div>
+
+    <div id="page-report" class="page">
+        <header>
+            <div class="header-shell">
+                <div>
+                    <div class="header-kicker">LEDGER REVIEW</div>
+                    <h1>報表與趨勢</h1>
+                </div>
+                <div class="header-badge">YEAR / DAY</div>
+            </div>
+        </header>
+
+        <div class="report-shell">
+            <div class="segmented-control">
+                <button class="segment-btn active" id="tab-year" onclick="switchReportMode('year')">年度趨勢</button>
+                <button class="segment-btn" id="tab-month" onclick="switchReportMode('month')">每日對帳</button>
+            </div>
+
+            <div id="report-month-selector" class="card" style="display:none; padding:14px;">
+                 <div class="panel-title">選擇月份</div>
+                 <input type="month" id="report-month-input" class="search-input" onchange="renderReport()">
+            </div>
+
+            <div id="report-content"></div>
+        </div>
+    </div>
+
+    <div id="page-search" class="page">
+        <header>
+            <div class="header-shell">
+                <div>
+                    <div class="header-kicker">MONEY INSIGHT</div>
+                    <h1>智慧數據分析</h1>
+                </div>
+                <div class="header-badge">INSIGHT</div>
+            </div>
+        </header>
+
+        <div class="analysis-shell">
+            <div class="segmented-control">
+                <button class="segment-btn active" id="an-tab-month" onclick="switchAnalysisMode('month')">月度分析</button>
+                <button class="segment-btn" id="an-tab-year" onclick="switchAnalysisMode('year')">年度分析</button>
+            </div>
+
+            <div class="card">
+                <div class="panel-title">分析條件</div>
+                <div class="search-grid">
+                    <input type="month" id="search-month" class="search-input">
+                    <select id="search-year" class="search-input" style="display:none;"></select>
+                    <select id="search-cat" class="search-input">
+                        <option value="">所有分類</option>
+                        <option value="food">🍔 飲食</option>
+                        <option value="transport">🚗 交通</option>
+                        <option value="entertainment">🎮 娛樂</option>
+                        <option value="life">🏠 生活</option>
+                        <option value="other">📦 其他</option>
+                    </select>
+                    <input type="text" id="search-keyword" class="search-input" placeholder="搜尋項目名稱...">
+                    <input type="number" id="search-amount-min" class="search-input" placeholder="最低金額..." min="0" inputmode="decimal">
+                    <input type="number" id="search-amount-max" class="search-input" placeholder="最高金額..." min="0" inputmode="decimal">
+                </div>
+                <div style="margin-top:12px;">
+                    <button class="primary-btn" onclick="performSearch()">開始分析</button>
+                </div>
+            </div>
+            <div id="search-results-area"></div>
+        </div>
+    </div>
+
+    <div id="page-settings" class="page">
+        <header>
+            <div class="header-shell">
+                <div>
+                    <div class="header-kicker">APP VAULT</div>
+                    <h1>系統設定</h1>
+                </div>
+                <div class="header-badge">SECURE</div>
+            </div>
+        </header>
+
+        <div class="settings-shell">
+            <div class="card">
+                <div class="panel-title">🏫 學校收入來源管理</div>
+                <div style="font-size:0.75rem; color:var(--text-sub); margin-bottom:12px;">在此設定您的學校與預設時薪。記帳時會自動帶入，若當日有變動可直接於記帳時修改，絕不會影響歷史紀錄。</div>
+                
+                <div id="school-settings-list" style="margin-bottom:12px;">
+                    <!-- JS 動態產生學校列表 -->
+                </div>
+
+                <div style="background:#f0e8dd; padding:12px; border-radius:10px; border:1px dashed #c4b8a9;">
+                    <div style="font-size:0.8rem; font-weight:800; color:var(--text-main); margin-bottom:8px;">新增學校</div>
+                    <div style="display:flex; gap:8px; align-items:center;">
+                        <input type="text" id="new-school-name" class="search-input" placeholder="名稱" style="min-height:42px; padding:0 10px;">
+                        <input type="number" id="new-school-rate" class="search-input" placeholder="時薪" style="width:75px; min-height:42px; padding:0 8px;">
+                        <button class="primary-btn" style="width:auto; padding:0 14px; min-height:42px; border-radius:14px; font-size:0.85rem;" onclick="addSchoolSetting()">新增</button>
+                    </div>
+                    <div id="school-add-error" style="color:var(--danger); font-size:0.75rem; font-weight:800; margin-top:8px; display:none;"></div>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="panel-title">資料完整備份與還原</div>
+                <button onclick="exportData()" class="primary-btn" style="margin-bottom:10px;">📤 匯出完整備份 (.json)</button>
+                <div id="backup-status" style="font-size:0.82rem; text-align:center; margin-bottom:14px; color:var(--text-sub);"></div>
+                <button onclick="document.getElementById('import-file').click()" class="ghost-btn" style="margin-bottom:12px;">📥 還原備份（支援舊版）</button>
+                <input type="file" id="import-file" style="display:none" onchange="importData(this)" accept=".json">
+                <button onclick="clearAllData()" class="danger-btn">🗑️ 永久抹除所有資料 (含設定)</button>
+            </div>
+            
+            <div class="card" style="padding:14px;">
+                <div class="panel-title">版本資訊</div>
+                <div style="font-size:1rem; font-weight:900; color:var(--text-main); margin-bottom:4px;">Eddie Pro v17.0</div>
+                <div style="font-size:0.84rem; color:var(--text-sub); font-weight:700;">Galaxy S23 Ultra Mobile UI · Full Backup Compatibility</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 專屬的學校編輯彈出視窗 -->
+    <div id="school-edit-modal" class="modal">
+        <div class="modal-body">
+            <div class="handle"></div>
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px;">
+                <h3 style="margin:0; font-weight:800;">編輯學校設定</h3>
+                <button onclick="closeSchoolEditModal()" style="background:#f1f5f9; border:none; width:32px; height:32px; border-radius:50%; font-size:1rem; color:var(--text-sub);">✕</button>
+            </div>
+            
+            <input type="hidden" id="edit-school-id">
+            
+            <div style="margin-bottom:12px;">
+                <label class="form-label">學校名稱</label>
+                <input type="text" id="edit-school-name" class="search-input">
+            </div>
+            <div style="margin-bottom:20px;">
+                <label class="form-label">預設時薪</label>
+                <input type="number" id="edit-school-rate" class="search-input">
+            </div>
+            
+            <div id="school-edit-error" style="color:var(--danger); font-size:0.8rem; margin-bottom:10px; display:none; font-weight:800;"></div>
+            
+            <button class="primary-btn" onclick="saveSchoolEdit()">儲存修改</button>
+            
+            <div style="margin-top:20px; padding-top:20px; border-top:1px dashed var(--border);">
+                <button class="danger-btn" id="btn-show-delete" onclick="showSchoolDeleteConfirm()">🗑️ 刪除此學校</button>
+                <div id="school-delete-confirm" style="display:none; background:#fff1f2; padding:12px; border-radius:12px; border:1px solid rgba(220,38,38,0.2);">
+                    <div style="color:var(--danger); font-size:0.85rem; font-weight:800; margin-bottom:8px;">確定要刪除嗎？<br><span style="font-size:0.75rem;">(過去的帳目紀錄不會受到任何影響)</span></div>
+                    <div style="display:flex; gap:8px;">
+                        <button class="danger-btn" style="min-height:36px;" onclick="executeDeleteSchool()">確定刪除</button>
+                        <button class="ghost-btn" style="min-height:36px;" onclick="hideSchoolDeleteConfirm()">取消</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 專屬的單筆帳目刪除確認彈窗 -->
+    <div id="tx-delete-modal" class="modal" style="z-index: 9999;">
+        <div class="modal-body" style="padding-bottom: 30px;">
+            <div class="handle"></div>
+            <h3 style="margin:0 0 15px 0; text-align:center; font-weight:800; color:var(--danger);">確認刪除</h3>
+            <div style="text-align:center; font-size:0.9rem; color:var(--text-sub); margin-bottom:20px;">確定要刪除這筆紀錄嗎？</div>
+            <button class="primary-btn" style="background:#fff1f2; color:var(--danger); margin-bottom:10px;" onclick="executeActionDelete()">確定刪除</button>
+            <button class="ghost-btn" onclick="closeTxDeleteModal()">取消</button>
+        </div>
+    </div>
+
+    <nav class="nav-bar">
+        <button class="nav-item active" onclick="navTo('home')"><span class="nav-icon">⌂</span>記帳</button>
+        <button class="nav-item" onclick="navTo('report')"><span class="nav-icon">▥</span>報表</button>
+        <button class="nav-item" onclick="navTo('search')"><span class="nav-icon">⌕</span>分析</button>
+        <button class="nav-item" onclick="navTo('settings')"><span class="nav-icon">⚙</span>設定</button>
+    </nav>
+
+    <button class="fab" id="fab-add" onclick="openModal()">+</button>
+
+    <div id="report-floatbar" class="report-floatbar collapsed" aria-live="polite">
+        <div class="rfb-top">
+            <div class="rfb-title">自選加總</div>
+            <div class="rfb-summary">
+                <span class="rfb-pill"><span class="k">天數</span><span id="report-sel-count">0</span></span>
+                <span class="rfb-pill rfb-net"><span class="k">淨額</span><span id="report-sel-net">$0</span></span>
+            </div>
+            <button class="rfb-toggle" onclick="toggleReportFloatbarExpand()" aria-label="展開或收合">▾</button>
+        </div>
+        <div class="rfb-expand">
+            <div class="rfb-btns">
+                <button class="rfb-btn" onclick="selectReportDaysAll()">全選本月</button>
+                <button class="rfb-btn" onclick="selectReportDaysWithData()">只選有紀錄</button>
+                <button class="rfb-btn danger" onclick="clearReportDaySelection()">清除</button>
+            </div>
+            <div class="rfb-stats">
+                <div class="rfb-box">
+                    <div class="k">收入加總</div>
+                    <div class="v" style="color:var(--success);" id="report-sel-inc">+0</div>
+                </div>
+                <div class="rfb-box">
+                    <div class="k">支出加總</div>
+                    <div class="v" style="color:var(--danger);" id="report-sel-exp">-0</div>
+                </div>
+            </div>
+            <div class="rfb-hint">✅ 勾選日期欄位方框即可納入加總；點整列仍可開啟該日明細。</div>
+            
+            <!-- 修改點：新增選取明細展示區 -->
+            <div id="report-sel-details" style="display:none; margin-top:12px; padding-top:10px; border-top:1px dashed rgba(148,163,184,0.3); max-height:28vh; overflow-y:auto;">
+                <div style="font-size:0.75rem; font-weight:800; color:var(--text-sub); margin-bottom:6px;">選取期間明細</div>
+                <ul id="report-sel-tx-list" style="list-style:none; padding:0; margin:0;"></ul>
+            </div>
+        </div>
+    </div>
+
+    <div id="add-modal" class="modal">
+        <div class="modal-body">
+            <div class="handle"></div>
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px;">
+                <h3 id="modal-title" style="margin:0; font-weight:800;">記帳</h3>
+                <button onclick="closeModal()" style="background:#f1f5f9; border:none; width:32px; height:32px; border-radius:50%; font-size:1rem; color:var(--text-sub);">✕</button>
+            </div>
+            <form onsubmit="handleTransactionSubmit(event)">
+                <div class="type-segmented">
+                    <button type="button" class="type-btn exp active" id="type-exp" onclick="setType('expense')">支出</button>
+                    <button type="button" class="type-btn inc" id="type-inc" onclick="setType('income')">收入</button>
+                    <input type="hidden" id="tx-type" value="expense">
+                </div>
+                
+                <!-- 收入專屬選項 (時薪/時數與學校) -->
+                <div id="income-fields" style="display:none; background:rgba(236,253,245,0.4); padding:12px; border-radius:18px; margin-bottom:15px; border:1px solid rgba(16,185,129,0.2);">
+                    <div style="margin-bottom:12px;">
+                        <label class="form-label">選擇學校 / 收入來源</label>
+                        <select id="tx-school" class="search-input" onchange="handleSchoolChange()" style="display:none;">
+                            <!-- 選項將由 JS 自動生成，來源為設定檔 -->
+                        </select>
+                        <div id="tx-school-buttons" class="instant-option-grid school-options"></div>
+                    </div>
+                    
+                    <div id="school-calc-fields" style="display:none; flex-direction:column;">
+                        <!-- 這裡會動態插入多組時薪/時數輸入列 -->
+                        <div id="school-calc-rows"></div>
+                        
+                        <div style="display:flex; align-items:center; margin-top:4px; margin-bottom:10px;">
+                            <button type="button" style="background:none; border:none; color:var(--accent); font-size:0.85rem; font-weight:900; padding:6px 0;" onclick="addRateRow()">+ 新增一組不同時薪</button>
+                        </div>
+                        
+                        <div id="quick-rates-container" style="display:flex; gap:6px; flex-wrap:wrap;"></div>
+                    </div>
+                </div>
+
+                <input type="text" id="tx-amount" class="amount-input" placeholder="0" readonly onclick="this.blur()">
+                
+                <div class="calc-grid" id="calc-grid">
+                    <button type="button" class="calc-btn clear" onclick="clearCalc()">C</button>
+                    <button type="button" class="calc-btn" onclick="backspaceCalc()">⌫</button>
+                    <button type="button" class="calc-btn op" onclick="appendCalc('/')">÷</button>
+                    <button type="button" class="calc-btn op" onclick="appendCalc('*')">×</button>
+                    
+                    <button type="button" class="calc-btn" onclick="appendCalc('7')">7</button>
+                    <button type="button" class="calc-btn" onclick="appendCalc('8')">8</button>
+                    <button type="button" class="calc-btn" onclick="appendCalc('9')">9</button>
+                    <button type="button" class="calc-btn op" onclick="appendCalc('-')">-</button>
+                    
+                    <button type="button" class="calc-btn" onclick="appendCalc('4')">4</button>
+                    <button type="button" class="calc-btn" onclick="appendCalc('5')">5</button>
+                    <button type="button" class="calc-btn" onclick="appendCalc('6')">6</button>
+                    <button type="button" class="calc-btn op" onclick="appendCalc('+')">+</button>
+                    
+                    <button type="button" class="calc-btn" onclick="appendCalc('1')">1</button>
+                    <button type="button" class="calc-btn" onclick="appendCalc('2')">2</button>
+                    <button type="button" class="calc-btn" onclick="appendCalc('3')">3</button>
+                    <button type="button" class="calc-btn equal" onclick="calcResult()">=</button>
+
+                    <button type="button" class="calc-btn span-2" onclick="appendCalc('0')">0</button>
+                    <button type="button" class="calc-btn" onclick="appendCalc('.')">.</button>
+                    <div style="width:100%"></div>
+                </div>
+
+                <div style="display:grid; grid-template-columns:1fr 1fr; gap:15px; margin-bottom:25px;">
+                    <div><label class="form-label">選擇日期</label><input type="date" id="tx-date" class="search-input" required></div>
+                    <div><label class="form-label">類別</label><select id="tx-cat" class="search-input" style="display:none;"><option value="food">🍔 飲食</option><option value="transport">🚗 交通</option><option value="entertainment">🎮 娛樂</option><option value="life">🏠 生活</option><option value="other" selected>📦 其他</option></select><div id="tx-cat-buttons" class="instant-option-grid"></div></div>
+                </div>
+                <!-- 摘要標籤加入了 id 以便動態修改 -->
+                <label class="form-label" id="tx-desc-label">摘要</label>
+                <input type="text" id="tx-desc" class="search-input" placeholder="請輸入項目說明..." required oninput="detectCategory()" style="margin-bottom:30px;">
+                <button type="submit" style="width:100%; padding:20px; border-radius:18px; border:none; background:var(--primary); color:white; font-size:1.15rem; font-weight:800;">確認儲存</button>
+            </form>
+        </div>
+    </div>
+
+    <div id="action-sheet" class="modal">
+        <div class="modal-body" style="padding-bottom: 30px;">
+            <div class="handle"></div>
+            <h3 id="action-sheet-title" style="margin:0 0 20px 0; text-align:center; font-weight:800; font-size:1rem; color:var(--text-sub);">選擇動作</h3>
+            <button class="action-sheet-item" onclick="onActionEdit()">✏️ 編輯這筆紀錄</button>
+            <button class="action-sheet-item danger" onclick="onActionDelete()">🗑️ 刪除這筆紀錄</button>
+            <button class="action-sheet-item" style="background:none; margin-top:10px;" onclick="closeActionSheet()">取消</button>
+        </div>
+    </div>
+
+    <div id="detail-modal" class="modal">
+        <div class="modal-body" style="max-height:85vh; display:flex; flex-direction:column;">
+            <div class="handle"></div>
+            <h3 id="detail-title" style="margin:0 0 25px 0; text-align:center; font-weight:800;"></h3>
+            <div style="flex:1; overflow-y:auto;"><ul id="detail-tx-list" class="tx-list" style="padding:0;"></ul></div>
+            <button onclick="closeDetailModal()" style="width:100%; padding:18px; border-radius:18px; border:none; background:var(--primary); color:white; font-weight:800; margin-top:25px;">關閉</button>
+        </div>
+    </div>
+
+<script>
+    function getTodayStr() {
+        const d = new Date();
+        return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+    }
+
+    let transactions = JSON.parse(localStorage.getItem('ledgerData')) || [];
+    let schools = JSON.parse(localStorage.getItem('ledgerSchoolsData')) || [];
+    
+    // ======== 智慧化資料格式轉換與清理 ========
+    if (schools.length === 0) {
+        const oldSchools = JSON.parse(localStorage.getItem('ledgerSchools'));
+        if (oldSchools && oldSchools.length > 0 && typeof oldSchools[0] === 'string') {
+            schools = oldSchools.map((s, index) => {
+                return { id: 's_' + Date.now() + '_' + index, name: s, defaultRate: parseFloat(localStorage.getItem('lastRate_' + s)) || 0 };
+            });
+            localStorage.removeItem('ledgerSchools');
+        }
+    }
+
+    const hasUsedA = transactions.some(t => t.school === '學校 A');
+    const hasUsedB = transactions.some(t => t.school === '學校 B');
+    const hasUsedC = transactions.some(t => t.school === '學校 C');
+
+    schools = schools.filter(s => {
+        if (s.name === '學校 A' && !hasUsedA) return false;
+        if (s.name === '學校 B' && !hasUsedB) return false;
+        if (s.name === '學校 C' && !hasUsedC) return false;
+        return true;
+    });
+
+    localStorage.setItem('ledgerSchoolsData', JSON.stringify(schools));
+    // ===========================================
+
+    // 全域系統防呆確認旗標
+    let pendingSystemAction = null;
+    let pendingImportData = null;
+
+    let editingId = null; 
+    let isEditingLoad = false; 
+    let txSchoolRates = [];    
+
+    let currentReportMode = 'year';
+    let analysisMode = 'month';
+    let selectedYear = new Date().getFullYear();
+    let selectedIds = new Set();
+    let pressTimer = null;
+
+    let selectedReportDays = new Set();
+    let reportCurrentMonth = '';
+    let reportFloatbarCollapsed = true;
+    let jumpToTodayAfterReportRender = false;
+
+    const BACKUP_KEY = 'lastBackupTime';
+
+    const catNames = { food:'飲食', transport:'交通', entertainment:'娛樂', life:'生活', other:'其他' };
+    const catIcons = { food:'🍔', transport:'🚗', entertainment:'🎮', life:'🏠', other:'📦' };
+    const catColors = { food:'var(--cat-food)', transport:'var(--cat-transport)', entertainment:'var(--cat-ent)', life:'var(--cat-life)', other:'var(--cat-other)' };
+    const keywordMap = { 
+        food: ['早', '午', '晚', '飯', '麵', '吃', '喝', '餐', '飲', '食', '咖啡'], 
+        transport: ['車', '油', '捷運', '公車', '高鐵', '台鐵', 'Uber'],
+        entertainment: ['影', '遊', '戲', 'Netflix', '玩', '樂'],
+        life: ['租', '電', '水', '醫', '衣', '鞋', '紙']
+    };
+
+    const today = getTodayStr();
+    document.getElementById('currentDate').value = today;
+    document.getElementById('search-month').value = today.slice(0, 7);
+    document.getElementById('report-month-input').value = today.slice(0, 7);
+
+    function navTo(pageId) {
+        clearSelection();
+        document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+        document.getElementById('page-' + pageId).classList.add('active');
+        document.querySelectorAll('.nav-item').forEach(b => b.classList.remove('active'));
+        const targetBtn = document.querySelector(`[onclick="navTo('${pageId}')"]`);
+        if(targetBtn) targetBtn.classList.add('active');
+
+        if(pageId === 'report') {
+            if (currentReportMode === 'month') {
+                const todayStr = getTodayStr();
+                document.getElementById('report-month-input').value = todayStr.slice(0, 7);
+                jumpToTodayAfterReportRender = true;
+            }
+            renderReport();
+        } else {
+            updateReportFloatbarVisibility(false);
+            updateReportPagePadding(false);
+        }
+
+        if(pageId === 'search') updateAnalysisYears();
+        if(pageId === 'settings') {
+            checkBackupStatus(); 
+            renderSchoolSettingsList();
+        }
+    }
+
+    function lockScroll(lock) {
+        if(lock) document.body.classList.add('modal-open');
+        else document.body.classList.remove('modal-open');
+    }
+
+    function formatMoney(n) { return n.toLocaleString(); }
+
+    function normalizeSchoolDisplayName(name) {
+        if (!name) return "";
+        const cleaned = String(name).trim();
+        return cleaned.includes('唐吉君') ? '唐吉君' : cleaned;
+    }
+
+    function renderHome() {
+        const target = document.getElementById('currentDate').value;
+        const month = target.slice(0, 7);
+        const mTx = transactions.filter(t => t.date.startsWith(month));
+        const inc = mTx.filter(t => t.type === 'income').reduce((a,c) => a+c.amount, 0);
+        const exp = mTx.filter(t => t.type === 'expense').reduce((a,c) => a+c.amount, 0);
+
+        document.getElementById('dash-month-label').innerText = `${parseInt(month.split('-')[1])}月 結餘`;
+        document.getElementById('dash-balance').innerText = `$${formatMoney(inc - exp)}`;
+
+        // 月度學校與一般收入拆分獨立加總邏輯
+        let monthlySchoolTotal = 0;
+        let monthlyGeneralTotal = 0;
+        let monthlySchoolMap = {};
+
+        mTx.forEach(t => {
+            if (t.type === 'income') {
+                if (t.school) {
+                    monthlySchoolTotal += (t.amount || 0);
+                    const displaySchoolName = normalizeSchoolDisplayName(t.school);
+                    monthlySchoolMap[displaySchoolName] = (monthlySchoolMap[displaySchoolName] || 0) + (t.amount || 0);
+                } else {
+                    monthlyGeneralTotal += (t.amount || 0);
+                }
+            }
+        });
+
+        document.getElementById('dash-inc-total').innerText = `+${formatMoney(inc)}`;
+        document.getElementById('dash-exp').innerText = `-${formatMoney(exp)}`;
+        document.getElementById('dash-inc-school').innerText = `+${formatMoney(monthlySchoolTotal)}`;
+        document.getElementById('dash-inc-general').innerText = `+${formatMoney(monthlyGeneralTotal)}`;
+
+        const breakdownEl = document.getElementById('dash-school-breakdown');
+        if (monthlySchoolTotal > 0) {
+            let breakdownHtml = `<div style="font-size:0.75rem; font-weight:800; color:rgba(255,255,255,0.7); margin-bottom:8px; letter-spacing:0.05em;">各校本月明細</div>`;
+            // 修改點：改用更緊湊的 inline-flex 讓標籤能左右並排
+            breakdownHtml += `<div style="display:flex; flex-wrap:wrap; gap:4px;">`;
+            for (const [sName, sAmt] of Object.entries(monthlySchoolMap)) {
+                breakdownHtml += `<span style="display:inline-flex; align-items:center; background:rgba(255,255,255,0.15); color:#fff; padding:4px 8px; border-radius:8px; font-size:0.75rem; font-weight:700; white-space:nowrap;">🏫 ${sName}: $${formatMoney(sAmt)}</span>`;
+            }
+            breakdownHtml += `</div>`;
+            breakdownEl.innerHTML = breakdownHtml;
+            breakdownEl.style.display = 'block';
+        } else {
+            breakdownEl.style.display = 'none';
+        }
+
+        const dTx = transactions.filter(t => t.date === target);
+        const list = document.getElementById('tx-list');
+        list.innerHTML = dTx.length ? '' : '<li style="text-align:center; padding:34px 18px; color:#94a3b8; background:rgba(255,255,255,.85); border-radius:20px; border:1px dashed rgba(148,163,184,.28);">尚未有紀錄 ☕</li>';
+        
+        let dSumInc = 0, dSumExp = 0;
+        let schoolSums = {};
+        
+        dTx.forEach(t => {
+            if(t.type==='income') {
+                dSumInc += t.amount;
+                if(t.school) {
+                    const displaySchoolName = normalizeSchoolDisplayName(t.school);
+                    schoolSums[displaySchoolName] = (schoolSums[displaySchoolName] || 0) + t.amount;
+                }
+            } else {
+                dSumExp += t.amount;
+            }
+            list.innerHTML += generateTxItem(t);
+        });
+        
+        let sumHtml = `總收:${formatMoney(dSumInc)} / 支:${formatMoney(dSumExp)}`;
+        const schoolKeys = Object.keys(schoolSums);
+        if(schoolKeys.length > 0 || dSumInc > 0) {
+            sumHtml += `<div style="margin-top:6px; padding-top:6px; border-top:1px solid rgba(148,163,184,0.15); font-size:0.8rem; font-weight:800; color:var(--text-main);">`;
+            
+            let dailySchoolTotal = 0;
+            schoolKeys.forEach(s => dailySchoolTotal += schoolSums[s]);
+            let dailyGeneralTotal = dSumInc - dailySchoolTotal;
+
+            if (dailySchoolTotal > 0) sumHtml += `<span style="display:inline-block; margin-right:10px; background:rgba(35,131,107,0.12); padding:2px 6px; border-radius:6px; color:var(--success);">🏫 學校共: $${formatMoney(dailySchoolTotal)}</span>`;
+            if (dailyGeneralTotal > 0) sumHtml += `<span style="display:inline-block; margin-right:10px; background:rgba(238,106,59,0.12); padding:2px 6px; border-radius:6px; color:var(--accent);">📦 一般共: $${formatMoney(dailyGeneralTotal)}</span>`;
+            
+            sumHtml += `</div>`;
+        }
+        document.getElementById('dash-daily-sum').innerHTML = sumHtml;
+    }
+
+    function generateTxItem(t) {
+        const sel = selectedIds.has(t.id) ? 'selected' : '';
+        let metaHtml = `<span class="cat-badge" style="background:${catColors[t.cat]||'var(--cat-other)'}">${catIcons[t.cat]||'📦'} ${catNames[t.cat]||'其他'}</span>`;
+        
+        if (t.school) {
+            const displaySchoolName = normalizeSchoolDisplayName(t.school);
+            metaHtml += `<span class="cat-badge" style="background:var(--accent); margin-left:6px;">🏫 </span>`;
+            if (t.rates && t.rates.length > 0) {
+                let rateStr = t.rates.map(r => `${r.rate}/hr×${r.hours}h`).join(', ');
+                metaHtml += `<span style="font-size:0.75rem; color:var(--text-sub); margin-left:6px; font-weight:800; vertical-align:middle;">(${rateStr})</span>`;
+            } else if (t.rate && t.hours) {
+                metaHtml += `<span style="font-size:0.75rem; color:var(--text-sub); margin-left:6px; font-weight:800; vertical-align:middle;">(${t.rate}/hr × ${t.hours}h)</span>`;
+            }
+        }
+
+        return `
+            <li class="tx-item ${sel}" onclick="handleItemClick(${t.id})" 
+                onmousedown="startPress(${t.id})" onmouseup="endPress()" ontouchstart="startPress(${t.id})" ontouchend="endPress()">
+                <div>
+                    <span class="tx-desc">${t.desc}</span>
+                    <div class="tx-meta">${metaHtml}</div>
+                </div>
+                <div style="text-align:right">
+                    <span style="font-weight:800; font-size:1.15rem; color:${t.type==='income'?'var(--success)':'var(--danger)'}">
+                        ${t.type==='income'?'+':'-'}${formatMoney(t.amount)}
+                    </span>
+                    <div style="font-size:0.65rem; color:#cbd5e1; margin-top:2px; font-weight:700;">${t.date.slice(5)}</div>
+                </div>
+            </li>`;
+    }
+
+    function handleItemClick(id) {
+        if(selectedIds.size > 0) toggleSelection(id);
+        else {
+            editingId = id;
+            const t = transactions.find(x => x.id === id);
+            document.getElementById('action-sheet-title').innerText = `${t.desc} - $${formatMoney(t.amount)}`;
+            document.getElementById('action-sheet').classList.add('active');
+            lockScroll(true);
+        }
+    }
+
+    function closeActionSheet() {
+        document.getElementById('action-sheet').classList.remove('active');
+        lockScroll(false);
+    }
+
+    function onActionEdit() {
+        const targetId = editingId;
+        closeActionSheet();
+        editTransaction(targetId);
+    }
+
+    function onActionDelete() {
+        closeActionSheet();
+        document.getElementById('tx-delete-modal').classList.add('active');
+    }
+    function closeTxDeleteModal() {
+        document.getElementById('tx-delete-modal').classList.remove('active');
+    }
+    function executeActionDelete() {
+        if (editingId) {
+            transactions = transactions.filter(t => t.id !== editingId);
+            save();
+        }
+        closeTxDeleteModal();
+    }
+
+    function bulkDelete() {
+        document.getElementById('bulk-delete-text').innerText = `確定要刪除這 ${selectedIds.size} 筆紀錄嗎？`;
+        document.getElementById('bulk-delete-confirm-modal').classList.add('active');
+    }
+    function cancelBulkDelete() {
+        document.getElementById('bulk-delete-confirm-modal').classList.remove('active');
+    }
+    function executeBulkDelete() {
+        transactions = transactions.filter(t => !selectedIds.has(t.id));
+        clearSelection();
+        save();
+        cancelBulkDelete();
+    }
+
+    // ====== 學校設定區塊 (Settings) ======
+    function saveSchools() {
+        localStorage.setItem('ledgerSchoolsData', JSON.stringify(schools));
+    }
+
+    function renderSchoolSettingsList() {
+        const container = document.getElementById('school-settings-list');
+        if (schools.length === 0) {
+            container.innerHTML = '<div style="text-align:center; color:var(--text-sub); font-size:0.85rem; padding:10px;">目前尚未設定任何學校</div>';
+            return;
+        }
+
+        let html = '';
+        schools.forEach(s => {
+            html += `
+            <div class="school-set-item">
+                <div>
+                    <span class="school-set-name">${s.name}</span>
+                    <span class="school-set-rate">($${s.defaultRate}/hr)</span>
+                </div>
+                <div class="school-set-actions">
+                    <button onclick="openSchoolEditModal('${s.id}')">修改設定</button>
+                </div>
+            </div>`;
+        });
+        container.innerHTML = html;
+    }
+
+    function addSchoolSetting() {
+        const nameInput = document.getElementById('new-school-name');
+        const rateInput = document.getElementById('new-school-rate');
+        const errorEl = document.getElementById('school-add-error');
+        const name = nameInput.value.trim();
+        const rateStr = rateInput.value;
+        const rate = rateStr === '' ? 0 : parseFloat(rateStr);
+
+        if (!name) {
+            errorEl.innerText = '請輸入學校名稱！';
+            errorEl.style.display = 'block';
+            return;
+        }
+        if (schools.some(s => s.name === name)) {
+            errorEl.innerText = '此學校名稱已存在清單中！';
+            errorEl.style.display = 'block';
+            return;
+        }
+
+        errorEl.style.display = 'none';
+        schools.push({ id: 's_' + Date.now() + '_' + Math.floor(Math.random()*1000), name: name, defaultRate: rate });
+        saveSchools();
+        
+        nameInput.value = '';
+        rateInput.value = '';
+        renderSchoolSettingsList();
+        renderSchoolOptions();
+    }
+
+    function openSchoolEditModal(id) {
+        const s = schools.find(x => x.id === id);
+        if (!s) return;
+        
+        document.getElementById('edit-school-id').value = s.id;
+        document.getElementById('edit-school-name').value = s.name;
+        document.getElementById('edit-school-rate').value = s.defaultRate || '';
+        
+        document.getElementById('school-edit-error').style.display = 'none';
+        document.getElementById('btn-show-delete').style.display = 'block';
+        document.getElementById('school-delete-confirm').style.display = 'none';
+        
+        document.getElementById('school-edit-modal').classList.add('active');
+        lockScroll(true);
+    }
+
+    function closeSchoolEditModal() {
+        document.getElementById('school-edit-modal').classList.remove('active');
+        lockScroll(false);
+    }
+
+    function saveSchoolEdit() {
+        const id = document.getElementById('edit-school-id').value;
+        const newName = document.getElementById('edit-school-name').value.trim();
+        const newRateStr = document.getElementById('edit-school-rate').value;
+        const newRate = newRateStr === '' ? 0 : parseFloat(newRateStr);
+        const errorEl = document.getElementById('school-edit-error');
+        
+        if (!newName) {
+            errorEl.innerText = '學校名稱不可為空白！';
+            errorEl.style.display = 'block';
+            return;
+        }
+        
+        const s = schools.find(x => x.id === id);
+        if (!s) return;
+        
+        if (newName !== s.name && schools.some(x => x.name === newName)) {
+            errorEl.innerText = '此學校名稱已存在清單中！';
+            errorEl.style.display = 'block';
+            return;
+        }
+        
+        errorEl.style.display = 'none';
+        s.name = newName;
+        s.defaultRate = newRate;
+        saveSchools();
+        renderSchoolSettingsList();
+        renderSchoolOptions(); 
+        closeSchoolEditModal();
+    }
+
+    function showSchoolDeleteConfirm() {
+        document.getElementById('btn-show-delete').style.display = 'none';
+        document.getElementById('school-delete-confirm').style.display = 'block';
+    }
+
+    function hideSchoolDeleteConfirm() {
+        document.getElementById('btn-show-delete').style.display = 'block';
+        document.getElementById('school-delete-confirm').style.display = 'none';
+    }
+
+    function executeDeleteSchool() {
+        const id = document.getElementById('edit-school-id').value;
+        schools = schools.filter(x => x.id !== id);
+        saveSchools();
+        renderSchoolSettingsList();
+        renderSchoolOptions();
+        closeSchoolEditModal();
+    }
+
+    // ====== 多組時薪表單邏輯 ======
+    function renderRateRows() {
+        const container = document.getElementById('school-calc-rows');
+        let html = '';
+        txSchoolRates.forEach((item, index) => {
+            html += `
+                <div style="display:grid; grid-template-columns: 1fr 1fr auto; gap:10px; margin-bottom:10px; align-items:end;">
+                    <div>
+                        ${index === 0 ? `<label class="form-label">時薪 <span style="font-size:0.6rem; color:#94a3b8;">(可隨意修改)</span></label>` : ''}
+                        <input type="number" class="search-input" placeholder="例如: 500" value="${item.rate || ''}" oninput="updateRateRow(${index}, 'rate', this.value)" required>
+                    </div>
+                    <div>
+                        ${index === 0 ? `<label class="form-label">時數</label>` : ''}
+                        <input type="number" class="search-input" placeholder="例如: 3" step="0.5" value="${item.hours || ''}" oninput="updateRateRow(${index}, 'hours', this.value)" required>
+                    </div>
+                    ${txSchoolRates.length > 1 ? `<button type="button" style="background:#fff1f2; color:var(--danger); border:none; border-radius:14px; width:44px; height:48px; font-weight:900;" onclick="removeRateRow(${index})">✕</button>` : '<div style="width:0;"></div>'}
+                </div>
+            `;
+        });
+        container.innerHTML = html;
+        calcSchoolAmount();
+    }
+
+    function updateRateRow(index, field, val) {
+        txSchoolRates[index][field] = parseFloat(val) || 0;
+        calcSchoolAmount();
+    }
+
+    function addRateRow() {
+        txSchoolRates.push({rate: '', hours: ''});
+        renderRateRows();
+    }
+
+    function removeRateRow(index) {
+        txSchoolRates.splice(index, 1);
+        renderRateRows();
+    }
+
+    function applyQuickRate(rate) {
+        let emptyIndex = txSchoolRates.findIndex(r => !r.rate);
+        if (emptyIndex !== -1) {
+            txSchoolRates[emptyIndex].rate = rate;
+        } else {
+            txSchoolRates.push({rate: rate, hours: ''});
+        }
+        renderRateRows();
+    }
+
+    function calcSchoolAmount() {
+        let total = 0;
+        txSchoolRates.forEach(item => {
+            const r = parseFloat(item.rate) || 0;
+            const h = parseFloat(item.hours) || 0;
+            total += (r * h);
+        });
+        const amt = Math.round(total);
+        document.getElementById('tx-amount').value = amt > 0 ? amt : '';
+    }
+
+    function renderSchoolOptions() {
+        const sel = document.getElementById('tx-school');
+        let html = '<option value="">一般收入 (使用下方數字鍵盤手動計算)</option>';
+        schools.forEach(s => html += `<option value="${s.name}">${s.name}</option>`);
+        sel.innerHTML = html;
+        renderSchoolButtons();
+    }
+
+    function renderSchoolButtons() {
+        const container = document.getElementById('tx-school-buttons');
+        const sel = document.getElementById('tx-school');
+        if (!container || !sel) return;
+
+        container.innerHTML = '';
+        const options = [{ value: '', label: '📦 一般收入' }].concat(
+            schools.map(s => ({ value: s.name, label: '🏫 ' + normalizeSchoolDisplayName(s.name) }))
+        );
+
+        // 若正在編輯歷史紀錄，且該學校已不在設定清單，仍保留可直接點選的選項。
+        if (sel.value && !options.some(o => o.value === sel.value)) {
+            options.push({ value: sel.value, label: '🏫 ' + normalizeSchoolDisplayName(sel.value) + '（歷史紀錄）' });
+        }
+
+        options.forEach(opt => {
+            const btn = document.createElement('button');
+            btn.type = 'button';
+            btn.className = 'instant-option-btn' + (sel.value === opt.value ? ' active' : '');
+            btn.textContent = opt.label;
+            btn.onclick = () => selectSchoolOption(opt.value);
+            container.appendChild(btn);
+        });
+    }
+
+    function selectSchoolOption(value) {
+        document.getElementById('tx-school').value = value;
+        handleSchoolChange();
+        renderSchoolButtons();
+    }
+
+    function renderCategoryButtons() {
+        const container = document.getElementById('tx-cat-buttons');
+        const sel = document.getElementById('tx-cat');
+        if (!container || !sel) return;
+        const options = [
+            { value: 'food', label: '🍔 飲食' },
+            { value: 'transport', label: '🚗 交通' },
+            { value: 'entertainment', label: '🎮 娛樂' },
+            { value: 'life', label: '🏠 生活' },
+            { value: 'other', label: '📦 其他' }
+        ];
+        container.innerHTML = '';
+        options.forEach(opt => {
+            const btn = document.createElement('button');
+            btn.type = 'button';
+            btn.className = 'instant-option-btn' + (sel.value === opt.value ? ' active' : '');
+            btn.textContent = opt.label;
+            btn.onclick = () => selectCategoryOption(opt.value);
+            container.appendChild(btn);
+        });
+    }
+
+    function selectCategoryOption(value) {
+        document.getElementById('tx-cat').value = value;
+        renderCategoryButtons();
+    }
+
+    function handleSchoolChange() {
+        const sel = document.getElementById('tx-school');
+        const isSchool = sel.value !== '';
+        const type = document.getElementById('tx-type').value;
+        
+        document.getElementById('school-calc-fields').style.display = isSchool ? 'flex' : 'none';
+        document.getElementById('calc-grid').style.display = isSchool ? 'none' : 'grid';
+
+        if (isSchool && type === 'income') {
+            document.getElementById('tx-desc').required = false;
+            document.getElementById('tx-desc-label').innerHTML = '摘要 <span style="font-size:0.6rem; color:#94a3b8;">(學校收入可不填)</span>';
+        } else {
+            document.getElementById('tx-desc').required = true;
+            document.getElementById('tx-desc-label').innerHTML = '摘要';
+        }
+
+        if (isSchool) {
+            if (!isEditingLoad) {
+                const targetSchool = schools.find(s => s.name === sel.value);
+                let defaultRate = targetSchool ? targetSchool.defaultRate : 0;
+                txSchoolRates = [{rate: defaultRate, hours: ''}];
+            }
+            isEditingLoad = false; 
+
+            renderRateRows();
+
+            const historyRatesSet = new Set();
+            transactions.filter(t => t.school === sel.value).forEach(t => {
+                if (t.rates) { 
+                    t.rates.forEach(r => { if(r.rate > 0) historyRatesSet.add(r.rate); });
+                } else if (t.rate > 0) {
+                    historyRatesSet.add(t.rate);
+                }
+            });
+            const targetSchool = schools.find(s => s.name === sel.value);
+            if (targetSchool && targetSchool.defaultRate > 0) historyRatesSet.add(targetSchool.defaultRate);
+
+            const historyRates = Array.from(historyRatesSet).sort((a,b) => b - a); 
+            const qrContainer = document.getElementById('quick-rates-container');
+            
+            if(historyRates.length > 0) {
+                qrContainer.innerHTML = historyRates.slice(0, 5).map(r =>
+                    `<button type="button" style="background:var(--accent-soft); color:var(--accent); border:none; padding:6px 12px; border-radius:12px; font-size:0.8rem; font-weight:800;" onclick="applyQuickRate(${r})">+ $${r}/hr</button>`
+                ).join('');
+            } else {
+                qrContainer.innerHTML = '';
+            }
+        } else {
+            txSchoolRates = [];
+        }
+        renderSchoolButtons();
+    }
+
+    function openModal() {
+        if(selectedIds.size > 0) return;
+        editingId = null;
+        isEditingLoad = false;
+        txSchoolRates = [];
+
+        document.getElementById('modal-title').innerText = "新增紀錄";
+        document.getElementById('tx-amount').value = '';
+        document.getElementById('tx-desc').value = '';
+        document.getElementById('tx-date').value = document.getElementById('currentDate').value;
+        
+        renderSchoolOptions();
+        document.getElementById('tx-school').value = '';
+        document.getElementById('school-calc-fields').style.display = 'none';
+
+        setType('expense');
+        renderCategoryButtons();
+        renderSchoolButtons();
+        document.getElementById('add-modal').classList.add('active');
+        lockScroll(true);
+    }
+
+    function editTransaction(id) {
+        const t = transactions.find(x => x.id === id);
+        if(!t) return;
+        editingId = id;
+        document.getElementById('modal-title').innerText = "編輯紀錄";
+        document.getElementById('tx-amount').value = t.amount;
+        document.getElementById('tx-desc').value = t.desc;
+        document.getElementById('tx-date').value = t.date;
+        document.getElementById('tx-cat').value = t.cat;
+        renderCategoryButtons();
+        
+        setType(t.type);
+
+        if (t.type === 'income') {
+            renderSchoolOptions();
+            
+            if (t.school && !schools.some(s => s.name === t.school)) {
+                const sel = document.getElementById('tx-school');
+                sel.innerHTML += `<option value="${t.school}">${t.school} (歷史紀錄)</option>`;
+            }
+
+            document.getElementById('tx-school').value = t.school || '';
+            renderSchoolButtons();
+
+            if (t.school) {
+                isEditingLoad = true; 
+                if (t.rates && t.rates.length > 0) {
+                    txSchoolRates = JSON.parse(JSON.stringify(t.rates)); 
+                } else if (t.rate) {
+                    txSchoolRates = [{rate: t.rate, hours: t.hours}]; 
+                } else {
+                    txSchoolRates = [{rate: '', hours: ''}];
+                }
+            }
+
+            handleSchoolChange();
+            
+            if (t.school) {
+                document.getElementById('tx-amount').value = t.amount;
+            }
+        }
+
+        if(document.getElementById('detail-modal').classList.contains('active')) closeDetailModal();
+        document.getElementById('add-modal').classList.add('active');
+        lockScroll(true);
+    }
+
+    function startPress(id) { pressTimer = setTimeout(() => { if(navigator.vibrate) navigator.vibrate(50); toggleSelection(id); }, 600); }
+    function endPress() { clearTimeout(pressTimer); }
+
+    function toggleSelection(id) {
+        selectedIds.has(id) ? selectedIds.delete(id) : selectedIds.add(id);
+        const bar = document.getElementById('selection-bar');
+        if(selectedIds.size > 0) {
+            bar.style.display = 'flex';
+            document.getElementById('sel-count').innerText = selectedIds.size;
+            let sum = 0; selectedIds.forEach(sid => { const t = transactions.find(x => x.id === sid); sum += (t.type === 'income' ? t.amount : -t.amount); });
+            document.getElementById('sel-total').innerText = (sum>=0?'+':'')+formatMoney(sum);
+        } else bar.style.display = 'none';
+        renderHome();
+    }
+
+    function clearSelection() { selectedIds.clear(); document.getElementById('selection-bar').style.display = 'none'; renderHome(); }
+
+    function switchReportMode(mode) {
+        currentReportMode = mode;
+        document.getElementById('tab-year').classList.toggle('active', mode === 'year');
+        document.getElementById('tab-month').classList.toggle('active', mode === 'month');
+        
+        const selector = document.getElementById('report-month-selector');
+        selector.style.display = (mode === 'month') ? 'block' : 'none';
+
+        if (mode === 'month') {
+            const todayStr = getTodayStr();
+            document.getElementById('report-month-input').value = todayStr.slice(0, 7);
+            jumpToTodayAfterReportRender = true;
+        }
+
+        updateReportFloatbarVisibility(mode === 'month');
+        updateReportPagePadding(mode === 'month');
+
+        renderReport();
+    }
+
+    function moveReportWeek(direction) {
+        const track = document.getElementById('report-week-track');
+        if (!track) return;
+        const page = track.querySelector('[data-report-week]');
+        const step = page ? page.getBoundingClientRect().width + 10 : track.clientWidth;
+        track.scrollBy({ left: direction * step, behavior: 'smooth' });
+    }
+
+    function updateReportFloatbarVisibility(shouldShow) {
+        const bar = document.getElementById('report-floatbar');
+        if (!bar) return;
+        bar.style.display = shouldShow ? 'block' : 'none';
+        if (shouldShow) {
+            bar.classList.toggle('collapsed', reportFloatbarCollapsed);
+            updateReportFloatbarChevron();
+        }
+    }
+
+    function updateReportPagePadding(shouldPad) {
+        const reportPage = document.getElementById('page-report');
+        if (!reportPage) return;
+        reportPage.classList.toggle('report-pad', shouldPad);
+    }
+
+    function toggleReportFloatbarExpand() {
+        const bar = document.getElementById('report-floatbar');
+        if (!bar) return;
+        bar.classList.toggle('collapsed');
+        reportFloatbarCollapsed = bar.classList.contains('collapsed');
+        updateReportFloatbarChevron();
+    }
+
+    function updateReportFloatbarChevron() {
+        const bar = document.getElementById('report-floatbar');
+        if (!bar) return;
+        const btn = bar.querySelector('.rfb-toggle');
+        if (!btn) return;
+        btn.textContent = bar.classList.contains('collapsed') ? '▾' : '▴';
+    }
+
+    function renderReport() {
+        const area = document.getElementById('report-content');
+        const yearsWithData = Array.from(new Set(transactions.map(t => t.date.split('-')[0]))).sort().reverse();
+
+        if(currentReportMode === 'year') {
+            let html = `<div class="comparison-scroll">`;
+            yearsWithData.forEach(y => {
+                const yTx = transactions.filter(t => t.date.startsWith(y));
+                const yInc = yTx.filter(t => t.type === 'income').reduce((a,c) => a+c.amount, 0);
+                const yExp = yTx.filter(t => t.type === 'expense').reduce((a,c) => a+c.amount, 0);
+                const yBal = yInc - yExp;
+                
+                html += `<div class="comparison-card" onclick="selectedYear=${parseInt(y)}; renderReport();">
+                    <span style="font-weight:800; display:block; margin-bottom:8px;">${y}年</span>
+                    <span style="color:var(--success); font-size:0.8rem; display:block;">+${formatMoney(yInc)}</span>
+                    <span style="color:var(--danger); font-size:0.8rem; display:block;">-${formatMoney(yExp)}</span>
+                    <div style="margin-top:8px; border-top:1px solid #e2e8f0; padding-top:6px;">
+                        <span style="font-size:0.7rem; color:var(--text-sub); display:block; font-weight:600;">年度結餘</span>
+                        <span style="font-weight:800; font-size:0.95rem; display:block; color:${yBal >= 0 ? 'var(--primary)' : 'var(--danger)'}">
+                           ${yBal >= 0 ? '$' : '-$'}${formatMoney(Math.abs(yBal))}
+                        </span>
+                    </div>
+                </div>`;
+            });
+            html += `</div><div class="card" style="padding:10px; margin-top:20px;"><table class="report-table"><thead><tr><th>月份</th><th>收入</th><th>支出</th><th>淨值</th></tr></thead><tbody>`;
+            for(let m=1; m<=12; m++) {
+                const mStr = `${selectedYear}-${String(m).padStart(2,'0')}`;
+                const mTx = transactions.filter(t => t.date.startsWith(mStr));
+                const inc = mTx.filter(t => t.type === 'income').reduce((a,c) => a+c.amount, 0);
+                const exp = mTx.filter(t => t.type === 'expense').reduce((a,c) => a+c.amount, 0);
+                html += `<tr><td>${m}月</td><td style="color:var(--success)">${inc?formatMoney(inc):'-'}</td><td style="color:var(--danger)">${exp?formatMoney(exp):'-'}</td><td style="font-weight:800">${formatMoney(inc-exp)}</td></tr>`;
+            }
+            area.innerHTML = html + `</tbody></table></div>`;
+
+            updateReportFloatbarVisibility(false);
+            updateReportPagePadding(false);
+        } else {
+            const monthInput = document.getElementById('report-month-input').value;
+            setReportMonthContext(monthInput);
+
+            const [year, month] = monthInput.split('-').map(Number);
+            const firstDay = new Date(year, month - 1, 1);
+            const lastDay = new Date(year, month, 0);
+            const todayStr = getTodayStr();
+
+            // 以星期一為每週起點、星期日為終點；前後不足一週的日期以留白呈現。
+            const firstMonday = new Date(firstDay);
+            const firstDow = firstMonday.getDay();
+            firstMonday.setDate(firstMonday.getDate() - (firstDow === 0 ? 6 : firstDow - 1));
+
+            const lastSunday = new Date(lastDay);
+            const lastDow = lastSunday.getDay();
+            lastSunday.setDate(lastSunday.getDate() + (lastDow === 0 ? 0 : 7 - lastDow));
+
+            const weeks = [];
+            for (let cursor = new Date(firstMonday); cursor <= lastSunday; cursor.setDate(cursor.getDate() + 7)) {
+                const weekStart = new Date(cursor);
+                const weekEnd = new Date(cursor);
+                weekEnd.setDate(weekEnd.getDate() + 6);
+                weeks.push({ start: weekStart, end: weekEnd });
+            }
+
+            const toDateStr = (dt) => `${dt.getFullYear()}-${String(dt.getMonth()+1).padStart(2,'0')}-${String(dt.getDate()).padStart(2,'0')}`;
+            const weekDayNames = ['一','二','三','四','五','六','日'];
+
+            let html = `
+                <div id="report-week-viewport" style="scroll-margin-top:84px;">
+                    <div style="display:grid; grid-template-columns:44px 1fr 44px; gap:8px; align-items:center; margin:0 0 10px;">
+                        <button type="button" class="ghost-btn" onclick="moveReportWeek(-1)" style="min-height:42px !important; padding:0;">❮</button>
+                        <div style="text-align:center; font-size:.78rem; font-weight:900; color:var(--text-sub);">一週一頁・左右滑動查看</div>
+                        <button type="button" class="ghost-btn" onclick="moveReportWeek(1)" style="min-height:42px !important; padding:0;">❯</button>
+                    </div>
+                    <div id="report-week-track" style="display:flex; gap:10px; overflow-x:auto; scroll-snap-type:x mandatory; scrollbar-width:none; overscroll-behavior-x:contain; touch-action:pan-x pan-y; padding-bottom:2px;">`;
+
+            weeks.forEach((week, weekIndex) => {
+                const weekStartStr = toDateStr(week.start);
+                const weekEndStr = toDateStr(week.end);
+                const isCurrentWeek = todayStr >= weekStartStr && todayStr <= weekEndStr;
+                const rangeLabel = `${week.start.getMonth()+1}/${week.start.getDate()}－${week.end.getMonth()+1}/${week.end.getDate()}`;
+
+                html += `<div class="card" data-report-week="${weekIndex}" ${isCurrentWeek ? 'id="report-current-week"' : ''} style="padding:10px; margin:0; min-width:100%; scroll-snap-align:start; scroll-snap-stop:always;">
+                    <div style="display:flex; justify-content:space-between; align-items:center; gap:8px; padding:2px 4px 9px;">
+                        <span style="font-size:.78rem; font-weight:950; color:var(--text-main);">${rangeLabel}</span>
+                        ${isCurrentWeek ? '<span style="padding:4px 7px; border-radius:5px; background:var(--accent); color:#fff; font-size:.62rem; font-weight:950;">本週</span>' : ''}
+                    </div>
+                    <table class="report-table">
+                        <thead><tr><th>日期</th><th>收入</th><th>支出</th><th>餘額</th></tr></thead>
+                        <tbody>`;
+
+                for (let i = 0; i < 7; i++) {
+                    const dateObj = new Date(week.start);
+                    dateObj.setDate(dateObj.getDate() + i);
+                    const dStr = toDateStr(dateObj);
+                    const inCurrentMonth = dateObj.getFullYear() === year && (dateObj.getMonth() + 1) === month;
+
+                    if (!inCurrentMonth) {
+                        html += `<tr>
+                            <td style="color:#b8b0a5; background:#f6f1e8;">週${weekDayNames[i]}　—</td>
+                            <td style="background:#f6f1e8; color:#b8b0a5;">-</td>
+                            <td style="background:#f6f1e8; color:#b8b0a5;">-</td>
+                            <td style="background:#f6f1e8; color:#b8b0a5;">-</td>
+                        </tr>`;
+                        continue;
+                    }
+
+                    const dTx = transactions.filter(t => t.date === dStr);
+                    const inc = dTx.filter(t => t.type === 'income').reduce((a,c) => a+c.amount, 0);
+                    const exp = dTx.filter(t => t.type === 'expense').reduce((a,c) => a+c.amount, 0);
+                    const isToday = dStr === todayStr;
+                    const isSaturday = i === 5;
+                    const isSunday = i === 6;
+                    const bg = isToday ? 'var(--accent-soft)' : (isSunday ? '#fff1f2' : (isSaturday ? '#f0f7ff' : '#fffdf8'));
+                    const todayTag = isToday ? '<span style="margin-left:5px; color:var(--accent); font-size:.62rem; font-weight:950;">今天</span>' : '';
+
+                    html += `<tr onclick="showDayDetails('${dStr}')">
+                        <td style="background:${bg};">
+                            <input type="checkbox" ${selectedReportDays.has(dStr)?'checked':''}
+                                onclick="event.stopPropagation(); toggleReportDay('${dStr}', this.checked)"
+                                style="transform:scale(1.05); margin-right:7px;" aria-label="選取 ${dStr}">
+                            ${dateObj.getDate()}日・週${weekDayNames[i]}${todayTag}
+                        </td>
+                        <td style="background:${bg}; color:var(--success)">${inc?formatMoney(inc):'-'}</td>
+                        <td style="background:${bg}; color:var(--danger)">${exp?formatMoney(exp):'-'}</td>
+                        <td style="background:${bg}; font-weight:700">${formatMoney(inc-exp)}</td>
+                    </tr>`;
+                }
+
+                html += `</tbody></table></div>`;
+            });
+
+            html += `</div></div>`;
+            area.innerHTML = html;
+
+            updateReportFloatbarVisibility(true);
+            updateReportPagePadding(true);
+            updateReportDaySum();
+
+            if (jumpToTodayAfterReportRender) {
+                jumpToTodayAfterReportRender = false;
+                requestAnimationFrame(() => {
+                    const track = document.getElementById('report-week-track');
+                    const currentWeek = document.getElementById('report-current-week');
+                    const viewport = document.getElementById('report-week-viewport');
+                    if (track && currentWeek) track.scrollLeft = Math.max(0, currentWeek.offsetLeft - track.offsetLeft);
+                    if (viewport) viewport.scrollIntoView({ behavior: 'auto', block: 'start' });
+                });
+            }
+        }
+    }
+
+    function showDayDetails(date) {
+        const dTx = transactions.filter(t => t.date === date);
+        const list = document.getElementById('detail-tx-list');
+        document.getElementById('detail-title').innerText = `${date} 明細`;
+        list.innerHTML = '';
+        dTx.forEach(t => {
+            let metaHtml = `<span class="cat-badge" style="background:${catColors[t.cat]}">${catIcons[t.cat]} ${catNames[t.cat]}</span>`;
+            if (t.school) {
+                metaHtml += `<span class="cat-badge" style="background:var(--accent); margin-left:6px;">🏫 ${t.school}</span>`;
+                if (t.rates && t.rates.length > 0) {
+                    let rateStr = t.rates.map(r => `${r.rate}/hr×${r.hours}h`).join(', ');
+                    metaHtml += `<span style="font-size:0.75rem; color:var(--text-sub); margin-left:6px; font-weight:800;">(${rateStr})</span>`;
+                } else if (t.rate && t.hours) {
+                    metaHtml += `<span style="font-size:0.75rem; color:var(--text-sub); margin-left:6px; font-weight:800;">(${t.rate}/hr × ${t.hours}h)</span>`;
+                }
+            }
+
+            list.innerHTML += `
+                <li class="tx-item" style="box-shadow:none; border:1px solid var(--border); margin-bottom:10px;">
+                    <div>
+                        <span class="tx-desc">${t.desc}</span>
+                        <div class="tx-meta">${metaHtml}</div>
+                    </div>
+                    <div style="text-align:right">
+                        <span style="font-weight:800; color:${t.type==='income'?'var(--success)':'var(--danger)'}">${t.type==='income'?'+':'-'}${t.amount}</span>
+                        <div style="margin-top:8px;"><button onclick="editTransaction(${t.id})" style="border:none; background:#f1f5f9; padding:6px 14px; border-radius:8px; font-weight:700; font-size:0.75rem;">編輯</button></div>
+                    </div>
+                </li>`;
+        });
+        document.getElementById('detail-modal').classList.add('active');
+        lockScroll(true);
+    }
+    
+    function closeDetailModal() {
+        document.getElementById('detail-modal').classList.remove('active');
+        lockScroll(false);
+    }
+
+    function setReportMonthContext(monthStr) {
+        if (reportCurrentMonth !== monthStr) {
+            reportCurrentMonth = monthStr;
+            selectedReportDays.clear();
+        }
+    }
+
+    function toggleReportDay(dateStr, checked) {
+        if (checked) selectedReportDays.add(dateStr);
+        else selectedReportDays.delete(dateStr);
+        updateReportDaySum();
+    }
+
+    function clearReportDaySelection() {
+        selectedReportDays.clear();
+        renderReport();
+    }
+
+    function selectReportDaysAll() {
+        if (!reportCurrentMonth) return;
+        const y = parseInt(reportCurrentMonth.split('-')[0]);
+        const m = parseInt(reportCurrentMonth.split('-')[1]);
+        const days = new Date(y, m, 0).getDate();
+        selectedReportDays.clear();
+        for (let d = 1; d <= days; d++) {
+            selectedReportDays.add(`${reportCurrentMonth}-${String(d).padStart(2,'0')}`);
+        }
+        renderReport();
+    }
+
+    function selectReportDaysWithData() {
+        if (!reportCurrentMonth) return;
+        selectedReportDays.clear();
+        transactions
+            .filter(t => t.date.startsWith(reportCurrentMonth))
+            .forEach(t => selectedReportDays.add(t.date));
+        renderReport();
+    }
+
+    // 修改點：在此函式中處理選取明細的動態渲染
+    function updateReportDaySum() {
+        const countEl = document.getElementById('report-sel-count');
+        const incEl = document.getElementById('report-sel-inc');
+        const expEl = document.getElementById('report-sel-exp');
+        const netEl = document.getElementById('report-sel-net');
+        const detailsContainer = document.getElementById('report-sel-details');
+        const detailsList = document.getElementById('report-sel-tx-list');
+
+        if (!countEl || !incEl || !expEl || !netEl) return;
+
+        const selDates = Array.from(selectedReportDays).sort(); // 確保日期排序由舊到新
+        let inc = 0, exp = 0;
+        let detailHtml = '';
+
+        selDates.forEach(d => {
+            const dTx = transactions.filter(t => t.date === d);
+            inc += dTx.filter(t => t.type === 'income').reduce((a,c)=>a+c.amount,0);
+            exp += dTx.filter(t => t.type === 'expense').reduce((a,c)=>a+c.amount,0);
+
+            // 若該日有紀錄，則動態生成明細列表
+            if (dTx.length > 0) {
+                detailHtml += `<div style="font-size:0.72rem; font-weight:900; color:var(--accent); margin: 10px 0 2px; padding-bottom:2px; border-bottom:1px solid rgba(226,232,240,.6);">${d}</div>`;
+                dTx.forEach(t => {
+                    let metaHtml = `<span style="color:var(--text-sub); font-size:0.65rem; font-weight:800; margin-right:4px;">${catNames[t.cat]||'其他'}</span>`;
+                    if (t.school) metaHtml += `<span style="color:var(--accent); font-size:0.65rem; font-weight:800;">🏫 ${t.school}</span>`;
+                    
+                    detailHtml += `
+                        <li style="display:flex; justify-content:space-between; align-items:center; padding: 5px 0;">
+                            <div style="flex:1; min-width:0; margin-right:8px;">
+                                <div style="font-size:0.8rem; font-weight:800; color:var(--text-main); white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${t.desc}</div>
+                                <div style="line-height:1;">${metaHtml}</div>
+                            </div>
+                            <div style="font-weight:900; font-size:0.85rem; color:${t.type==='income'?'var(--success)':'var(--danger)'}">
+                                ${t.type==='income'?'+':'-'}${formatMoney(t.amount)}
+                            </div>
+                        </li>
+                    `;
+                });
+            }
+        });
+
+        const net = inc - exp;
+
+        countEl.innerText = selDates.length;
+        incEl.innerText = `+${formatMoney(inc)}`;
+        expEl.innerText = `-${formatMoney(exp)}`;
+        netEl.innerText = `${net>=0?'$':'-$'}${formatMoney(Math.abs(net))}`;
+
+        // 更新明細顯示區塊
+        if (selDates.length > 0 && detailHtml !== '') {
+            detailsList.innerHTML = detailHtml;
+            detailsContainer.style.display = 'block';
+        } else {
+            detailsList.innerHTML = '';
+            detailsContainer.style.display = 'none';
+        }
+    }
+
+    function switchAnalysisMode(mode) {
+        analysisMode = mode;
+        document.getElementById('an-tab-month').classList.toggle('active', mode === 'month');
+        document.getElementById('an-tab-year').classList.toggle('active', mode === 'year');
+        document.getElementById('search-month').style.display = mode === 'month' ? 'block' : 'none';
+        document.getElementById('search-year').style.display = mode === 'year' ? 'block' : 'none';
+    }
+
+    function updateAnalysisYears() {
+        const years = Array.from(new Set(transactions.map(t => t.date.split('-')[0]))).sort().reverse();
+        const yearSelect = document.getElementById('search-year');
+        const currentVal = yearSelect.value;
+        
+        let html = '<option value="">選擇年份</option>';
+        const currentYear = new Date().getFullYear().toString();
+
+        years.forEach(y => { html += `<option value="${y}">${y}年</option>`; });
+
+        if(!years.includes(currentYear)) html = `<option value="${currentYear}">${currentYear}年</option>` + html;
+
+        yearSelect.innerHTML = html;
+        if (currentVal && years.includes(currentVal)) yearSelect.value = currentVal;
+        else yearSelect.value = currentYear;
+    }
+
+    function performSearch() {
+        const cat = document.getElementById('search-cat').value;
+        const kw = document.getElementById('search-keyword').value.toLowerCase();
+        const minAmountRaw = document.getElementById('search-amount-min').value;
+        const maxAmountRaw = document.getElementById('search-amount-max').value;
+        const minAmount = minAmountRaw === '' ? null : parseFloat(minAmountRaw);
+        const maxAmount = maxAmountRaw === '' ? null : parseFloat(maxAmountRaw);
+        let dateFilter = (analysisMode === 'month') ? document.getElementById('search-month').value : document.getElementById('search-year').value;
+
+        const res = transactions.filter(t => {
+            const dateMatch = dateFilter ? t.date.startsWith(dateFilter) : true;
+            const catMatch = cat ? t.cat === cat : true;
+            const kwMatch = kw ? t.desc.toLowerCase().includes(kw) : true;
+            const minMatch = minAmount === null || (t.amount || 0) >= minAmount;
+            const maxMatch = maxAmount === null || (t.amount || 0) <= maxAmount;
+            return dateMatch && catMatch && kwMatch && minMatch && maxMatch;
+        }).sort((a,b)=>new Date(b.date)-new Date(a.date));
+
+        const area = document.getElementById('search-results-area');
+        const expTotal = res.filter(t => t.type==='expense').reduce((a,c)=>a+c.amount,0);
+        
+        let stats = {};
+        res.filter(t => t.type==='expense').forEach(t => stats[t.cat] = (stats[t.cat]||0) + t.amount);
+        
+        let html = '<div class="card"><h3 style="margin:0 0 20px 0; font-weight:800;">分類佔比分析</h3>';
+        
+        if (expTotal === 0) html += '<div style="text-align:center; color:#94a3b8; padding:20px;">此條件下無支出數據</div>';
+        else {
+            Object.entries(stats).sort((a,b)=>b[1]-a[1]).forEach(([c, v]) => {
+                const perc = Math.round(v/expTotal*100);
+                html += `<div class="progress-container"><div class="progress-header"><span>${catIcons[c]} ${catNames[c]}</span><span>$${formatMoney(v)} (${perc}%)</span></div><div class="progress-track"><div class="progress-fill" style="width:${perc}%; background:${catColors[c]}"></div></div></div>`;
+            });
+        }
+        
+        html += '</div><div class="section-title">搜尋結果</div><ul class="tx-list">';
+        if (res.length === 0) html += '<li style="text-align:center; padding:26px 18px; color:#94a3b8; background:rgba(255,255,255,.85); border-radius:20px; border:1px dashed rgba(148,163,184,.28);">查無符合資料</li>';
+        else res.forEach(t => html += generateTxItem(t));
+        area.innerHTML = html + '</ul>';
+    }
+
+    function setType(type) {
+        document.getElementById('tx-type').value = type;
+        document.getElementById('type-exp').classList.toggle('active', type === 'expense');
+        document.getElementById('type-inc').classList.toggle('active', type === 'income');
+        
+        if (type === 'income') {
+            document.getElementById('income-fields').style.display = 'block';
+            handleSchoolChange();
+            renderSchoolButtons();
+        } else {
+            document.getElementById('income-fields').style.display = 'none';
+            document.getElementById('calc-grid').style.display = 'grid';
+            renderCategoryButtons();
+            document.getElementById('tx-amount').readOnly = true;
+
+            document.getElementById('tx-desc').required = true;
+            document.getElementById('tx-desc-label').innerHTML = '摘要';
+        }
+    }
+
+    function appendCalc(char) {
+        const inp = document.getElementById('tx-amount');
+        if(inp.value === '0' && char !== '.') inp.value = '';
+        inp.value += char;
+    }
+    
+    function backspaceCalc() {
+        const inp = document.getElementById('tx-amount');
+        let val = inp.value.toString();
+        if (val.length > 0) inp.value = val.slice(0, -1);
+    }
+    
+    function clearCalc() { document.getElementById('tx-amount').value = ''; }
+
+    function calcResult() {
+        const inp = document.getElementById('tx-amount');
+        const val = calculateAmount(inp.value);
+        inp.value = val;
+        return val; 
+    }
+
+    function calculateAmount(val) {
+        if (!val) return 0;
+        const safeVal = val.toString().replace(/[^0-9\+\-\*\/\(\)\.]/g, '');
+        try {
+            const result = new Function('return ' + safeVal)();
+            return Math.round(result * 100) / 100 || 0; 
+        } catch (e) { return 0; }
+    }
+
+    function handleTransactionSubmit(e) {
+        e.preventDefault();
+        const type = document.getElementById('tx-type').value;
+        let finalAmount = 0;
+        let school = '';
+        let validRates = [];
+        let desc = document.getElementById('tx-desc').value.trim();
+
+        if (type === 'income' && document.getElementById('tx-school').value) {
+            school = document.getElementById('tx-school').value;
+            validRates = txSchoolRates.filter(item => item.rate > 0 && item.hours > 0);
+            
+            if (validRates.length === 0) {
+                alert("請填寫有效的時薪與時數！");
+                return;
+            }
+
+            let total = 0;
+            validRates.forEach(item => total += (item.rate * item.hours));
+            finalAmount = Math.round(total);
+
+            if (!desc) {
+                desc = school + " 收入";
+            }
+        } else {
+            finalAmount = calcResult(); 
+        }
+
+        if (finalAmount <= 0) { alert("金額必須大於 0"); return; }
+        
+        const data = {
+            id: editingId || Date.now(),
+            amount: finalAmount,
+            type: type,
+            cat: document.getElementById('tx-cat').value,
+            date: document.getElementById('tx-date').value,
+            desc: desc
+        };
+
+        if (school) {
+            data.school = school;
+            data.rates = validRates;
+        }
+
+        if(editingId) transactions = transactions.map(t => t.id === editingId ? data : t);
+        else transactions.push(data);
+        
+        save(); 
+        closeModal();
+    }
+
+    function save() { 
+        localStorage.setItem('ledgerData', JSON.stringify(transactions)); 
+        renderHome(); 
+        updateAnalysisYears();
+        if(document.getElementById('page-search').classList.contains('active')) performSearch();
+        if(document.getElementById('page-report').classList.contains('active') && currentReportMode==='month') renderReport();
+    }
+
+    function closeModal() { document.getElementById('add-modal').classList.remove('active'); lockScroll(false); }
+
+    function changeDate(d) {
+        const inp = document.getElementById('currentDate');
+        const dt = new Date(inp.value); dt.setDate(dt.getDate()+d);
+        inp.value = `${dt.getFullYear()}-${String(dt.getMonth() + 1).padStart(2, '0')}-${String(dt.getDate()).padStart(2, '0')}`;
+        renderHome();
+    }
+
+    function detectCategory() {
+        const desc = document.getElementById('tx-desc').value;
+        for(const [c, ks] of Object.entries(keywordMap)) {
+            if(ks.some(k => desc.includes(k))) { document.getElementById('tx-cat').value = c; renderCategoryButtons(); break; }
+        }
+    }
+    
+    function checkBackupStatus() {
+        const last = localStorage.getItem(BACKUP_KEY);
+        const statusEl = document.getElementById('backup-status');
+        if (!last) { statusEl.innerHTML = '<span class="backup-warning">⚠️ 您尚未進行過備份！</span>'; return; }
+        const diff = Date.now() - parseInt(last);
+        const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+        const dateStr = new Date(parseInt(last)).toLocaleString();
+        if (days >= 7) statusEl.innerHTML = `<span class="backup-warning">⚠️ 上次備份：${days} 天前 (${dateStr})，建議立即備份。</span>`; 
+        else {
+            const timeAgo = days === 0 ? "今天" : `${days} 天前`;
+            statusEl.innerHTML = `<span class="backup-safe">✅ 上次備份：${timeAgo} (${dateStr})</span>`;
+        }
+    }
+
+    // ====== 系統資料全域防呆與還原 ======
+    function closeSystemConfirm() {
+        document.getElementById('system-confirm-modal').classList.remove('active');
+        pendingSystemAction = null;
+        pendingImportData = null;
+        const fileInput = document.getElementById('import-file');
+        if(fileInput) fileInput.value = '';
+        document.getElementById('sys-confirm-btn').style.display = 'block';
+        lockScroll(false);
+    }
+
+    function executeSystemConfirm() {
+        if (pendingSystemAction) pendingSystemAction();
+    }
+
+    function safeParseJson(value, fallback = null) {
+        if (value === null || value === undefined) return fallback;
+        if (typeof value !== 'string') return value;
+        try { return JSON.parse(value); } catch (_) { return fallback; }
+    }
+
+    function getFullStorageSnapshot() {
+        const snapshot = {};
+        for (let i = 0; i < localStorage.length; i++) {
+            const key = localStorage.key(i);
+            if (key !== null) snapshot[key] = localStorage.getItem(key);
+        }
+        // 以記憶體中的最新狀態覆寫 canonical keys，避免備份到尚未同步的內容
+        snapshot.ledgerData = JSON.stringify(transactions);
+        snapshot.ledgerSchoolsData = JSON.stringify(schools);
+        return snapshot;
+    }
+
+    function normalizeLegacySchools(rawSchools, storageSnapshot = {}) {
+        if (!Array.isArray(rawSchools)) return null;
+        if (rawSchools.length === 0) return [];
+        if (typeof rawSchools[0] === 'object') return rawSchools;
+        if (typeof rawSchools[0] === 'string') {
+            return rawSchools.map((name, index) => ({
+                id: `legacy_${Date.now()}_${index}`,
+                name,
+                defaultRate: parseFloat(storageSnapshot['lastRate_' + name]) || 0
+            }));
+        }
+        return null;
+    }
+
+    function normalizeBackupPayload(data) {
+        // v1~舊版：最早期只有交易陣列
+        if (Array.isArray(data)) {
+            return {
+                tx: data,
+                sc: schools,
+                storage: null,
+                formatLabel: '舊版純交易陣列',
+                preserveSchools: true
+            };
+        }
+
+        if (!data || typeof data !== 'object') throw new Error('Unsupported backup format');
+
+        // v16 使用 storage；亦接受其他舊版可能使用 localStorage / storageSnapshot 的命名
+        const storage = (data.storage && typeof data.storage === 'object') ? data.storage
+            : (data.localStorage && typeof data.localStorage === 'object') ? data.localStorage
+            : (data.storageSnapshot && typeof data.storageSnapshot === 'object') ? data.storageSnapshot
+            : null;
+
+        const txCandidates = [
+            data.transactions,
+            data.ledgerData,
+            data.records,
+            data.data,
+            storage ? storage.ledgerData : null
+        ];
+
+        let newTx = null;
+        for (const candidate of txCandidates) {
+            const parsed = safeParseJson(candidate, null);
+            if (Array.isArray(parsed)) { newTx = parsed; break; }
+        }
+
+        const schoolCandidates = [
+            data.schools,
+            data.ledgerSchoolsData,
+            storage ? storage.ledgerSchoolsData : null,
+            data.ledgerSchools,
+            storage ? storage.ledgerSchools : null
+        ];
+
+        let newSchools = null;
+        for (const candidate of schoolCandidates) {
+            const parsed = safeParseJson(candidate, null);
+            const normalized = normalizeLegacySchools(parsed, storage || {});
+            if (normalized !== null) { newSchools = normalized; break; }
+        }
+
+        // 無任何可辨識資料時拒絕匯入，避免誤把無關 JSON 當空備份覆蓋
+        if (newTx === null && newSchools === null && !storage) {
+            throw new Error('No recognizable ledger data');
+        }
+
+        if (newTx === null) newTx = transactions;
+        const preserveSchools = newSchools === null;
+        if (preserveSchools) newSchools = schools;
+
+        let formatLabel = '相容版物件備份';
+        if (data.schemaVersion >= 2 || data.version === '17.0' || data.version === '16.0') formatLabel = `Eddie Pro v${data.version || '17.0'} 完整備份`;
+        else if (data.transactions || data.schools) formatLabel = `Eddie Pro ${data.version ? 'v' + data.version : '舊版'} 備份`;
+        else if (storage) formatLabel = '完整 localStorage 備份';
+
+        return { tx: newTx, sc: newSchools, storage, formatLabel, preserveSchools };
+    }
+
+    function exportData() {
+        const d = getTodayStr();
+        const now = new Date();
+        const backupTimestamp = Date.now().toString();
+        localStorage.setItem(BACKUP_KEY, backupTimestamp);
+
+        // v17：同時保存標準化資料 + 完整 localStorage 快照。
+        // 這可支援未來新增設定，同時仍保留舊版欄位 transactions / schools。
+        const fullData = {
+            app: 'Eddie Pro 收支管家',
+            version: '17.0',
+            schemaVersion: 2,
+            exportedAt: now.toISOString(),
+            transactions: transactions,
+            schools: schools,
+            storage: getFullStorageSnapshot()
+        };
+
+        const blob = new Blob([JSON.stringify(fullData, null, 2)], {type: 'application/json;charset=utf-8'});
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        const hh = String(now.getHours()).padStart(2, '0');
+        const mm = String(now.getMinutes()).padStart(2, '0');
+        a.download = `eddie_pro_full_backup_${d}_${hh}${mm}.json`;
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
+        setTimeout(() => URL.revokeObjectURL(url), 1000);
+        checkBackupStatus();
+    }
+
+    function importData(inp) {
+        const file = inp.files[0];
+        if (!file) return;
+
+        const r = new FileReader();
+        r.onload = e => {
+            try {
+                const raw = JSON.parse(e.target.result);
+                const normalized = normalizeBackupPayload(raw);
+                pendingImportData = normalized;
+
+                document.getElementById('sys-confirm-title').innerText = '還原資料確認';
+                document.getElementById('sys-confirm-title').style.color = 'var(--primary)';
+                document.getElementById('sys-confirm-btn').style.display = 'block';
+                document.getElementById('sys-confirm-btn').style.background = 'var(--primary)';
+                document.getElementById('sys-confirm-btn').style.color = 'white';
+                document.getElementById('sys-confirm-btn').innerText = '確定覆蓋並還原';
+
+                const storageCount = normalized.storage ? Object.keys(normalized.storage).length : 0;
+                let warningText = `偵測格式：${normalized.formatLabel}\n\n`;
+                warningText += `交易紀錄：${normalized.tx.length} 筆\n`;
+                warningText += `學校設定：${normalized.sc.length} 間`;
+                if (storageCount) warningText += `\n完整儲存項目：${storageCount} 項`;
+                if (normalized.preserveSchools) warningText += `\n\n舊版檔案未包含學校設定，因此會保留目前的學校設定。`;
+                warningText += `\n\n⚠️ 還原後將以備份內容覆蓋目前的 App 資料。`;
+                document.getElementById('sys-confirm-text').innerText = warningText;
+
+                pendingSystemAction = () => {
+                    // v17/v16 完整備份：先回填所有快照 key；不主動刪除快照中沒有的無關 key。
+                    if (pendingImportData.storage) {
+                        Object.entries(pendingImportData.storage).forEach(([key, value]) => {
+                            if (typeof value === 'string') localStorage.setItem(key, value);
+                            else if (value !== null && value !== undefined) localStorage.setItem(key, String(value));
+                        });
+                    }
+
+                    transactions = Array.isArray(pendingImportData.tx) ? pendingImportData.tx : [];
+                    schools = Array.isArray(pendingImportData.sc) ? pendingImportData.sc : [];
+                    localStorage.setItem('ledgerData', JSON.stringify(transactions));
+                    localStorage.setItem('ledgerSchoolsData', JSON.stringify(schools));
+                    location.reload();
+                };
+
+                document.getElementById('system-confirm-modal').classList.add('active');
+                lockScroll(true);
+            } catch(err) {
+                document.getElementById('sys-confirm-title').innerText = '匯入失敗';
+                document.getElementById('sys-confirm-title').style.color = 'var(--danger)';
+                document.getElementById('sys-confirm-btn').style.display = 'none';
+                document.getElementById('sys-confirm-text').innerText = '備份檔案格式不符、內容已損毀，或不是 Eddie Pro 可辨識的備份。請重新選擇正確的 JSON 檔案。';
+                document.getElementById('system-confirm-modal').classList.add('active');
+                lockScroll(true);
+            }
+        };
+        r.readAsText(file);
+    }
+
+    function clearAllData() {
+        document.getElementById('sys-confirm-title').innerText = '抹除全部資料';
+        document.getElementById('sys-confirm-title').style.color = 'var(--danger)';
+        document.getElementById('sys-confirm-btn').style.display = 'block';
+        document.getElementById('sys-confirm-btn').style.background = '#fff1f2';
+        document.getElementById('sys-confirm-btn').style.color = 'var(--danger)';
+        document.getElementById('sys-confirm-btn').innerText = '確定永久抹除';
+        document.getElementById('sys-confirm-text').innerText = '警告：這將永久抹除全部「記帳資料」、「學校設定」與 Eddie Pro 舊版相容設定！\n\n此操作無法撤回，建議先匯出完整備份。';
+
+        pendingSystemAction = () => {
+            const keys = [];
+            for (let i = 0; i < localStorage.length; i++) {
+                const key = localStorage.key(i);
+                if (key && (key === BACKUP_KEY || key.startsWith('ledger') || key.startsWith('lastRate_') || key.startsWith('eddiePro'))) {
+                    keys.push(key);
+                }
+            }
+            keys.forEach(key => localStorage.removeItem(key));
+            location.reload();
+        };
+
+        document.getElementById('system-confirm-modal').classList.add('active');
+        lockScroll(true);
+    }
+
+    function enforceMobileWidth() {
+        document.documentElement.style.overflowX = 'hidden';
+        document.body.style.overflowX = 'hidden';
+        document.body.style.maxWidth = '100vw';
+        document.body.style.minHeight = '100dvh';
+    }
+
+    renderHome();
+    updateAnalysisYears();
+    checkBackupStatus();
+    enforceMobileWidth();
+    window.addEventListener('resize', enforceMobileWidth);
+
+    updateReportFloatbarVisibility(false);
+    updateReportPagePadding(false);
+</script>
+</body>
+</html>
